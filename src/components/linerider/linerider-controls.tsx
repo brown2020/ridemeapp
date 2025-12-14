@@ -24,7 +24,35 @@ import {
   Sparkles,
   ZoomIn,
   ZoomOut,
+  Turtle,
+  Rabbit,
 } from "lucide-react";
+
+// Available playback speeds
+const SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
+
+// Tooltip wrapper component
+function Tooltip({
+  children,
+  text,
+}: {
+  children: React.ReactNode;
+  text?: string;
+}) {
+  if (!text) return <>{children}</>;
+
+  return (
+    <div className="relative group/tooltip">
+      {children}
+      <div className="pointer-events-none absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2 opacity-0 transition-opacity duration-150 group-hover/tooltip:opacity-100">
+        <div className="whitespace-nowrap rounded-md bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white shadow-lg">
+          {text}
+          <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-800" />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Icon button component
 function IconBtn({
@@ -32,6 +60,7 @@ function IconBtn({
   variant,
   children,
   tooltip,
+  disabled,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   active?: boolean;
@@ -41,7 +70,9 @@ function IconBtn({
   let classes =
     "relative h-9 px-2.5 flex items-center gap-1.5 text-sm font-medium rounded-md transition-all duration-150 ";
 
-  if (variant === "primary") {
+  if (disabled) {
+    classes += "text-slate-300 cursor-not-allowed";
+  } else if (variant === "primary") {
     classes += "bg-slate-700 text-white hover:bg-slate-600 shadow-sm";
   } else if (variant === "danger") {
     classes += "text-slate-500 hover:text-red-600 hover:bg-red-50";
@@ -52,9 +83,11 @@ function IconBtn({
   }
 
   return (
-    <button className={classes} title={tooltip} {...props}>
-      {children}
-    </button>
+    <Tooltip text={disabled ? undefined : tooltip}>
+      <button className={classes} disabled={disabled} {...props}>
+        {children}
+      </button>
+    </Tooltip>
   );
 }
 
@@ -154,7 +187,6 @@ export function LineriderControls() {
                 tooltip="Normal line (1)"
               >
                 <Minus className="w-4 h-4 text-blue-500" />
-                <span className="text-xs">Normal</span>
               </IconBtn>
               <IconBtn
                 active={lineType === "accel"}
@@ -162,7 +194,6 @@ export function LineriderControls() {
                 tooltip="Speed boost (2)"
               >
                 <Zap className="w-4 h-4 text-amber-500" />
-                <span className="text-xs">Speed</span>
               </IconBtn>
               <IconBtn
                 active={lineType === "scenery"}
@@ -170,7 +201,6 @@ export function LineriderControls() {
                 tooltip="Decoration (3)"
               >
                 <Sparkles className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs">Decor</span>
               </IconBtn>
             </div>
           </>
@@ -180,7 +210,7 @@ export function LineriderControls() {
         <div className="flex-1" />
 
         {/* Playback Controls */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <IconBtn
             variant="primary"
             onClick={togglePlaying}
@@ -192,17 +222,57 @@ export function LineriderControls() {
               <Play className="w-4 h-4" />
             )}
           </IconBtn>
-          <select
-            value={settings.playbackSpeed}
-            onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-            className="h-9 px-2 text-sm font-medium rounded-md border border-slate-200 bg-white text-slate-600 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 cursor-pointer"
-          >
-            <option value={0.25}>0.25×</option>
-            <option value={0.5}>0.5×</option>
-            <option value={1}>1×</option>
-            <option value={2}>2×</option>
-            <option value={4}>4×</option>
-          </select>
+          <div className="flex items-center gap-0.5 bg-slate-50 rounded-lg p-0.5">
+            <IconBtn
+              onClick={() => {
+                const idx = SPEEDS.indexOf(
+                  settings.playbackSpeed as (typeof SPEEDS)[number]
+                );
+                if (idx > 0) setPlaybackSpeed(SPEEDS[idx - 1]);
+              }}
+              tooltip={`Slower (${
+                settings.playbackSpeed <= SPEEDS[0]
+                  ? "min"
+                  : SPEEDS[
+                      Math.max(
+                        0,
+                        SPEEDS.indexOf(
+                          settings.playbackSpeed as (typeof SPEEDS)[number]
+                        ) - 1
+                      )
+                    ] + "×"
+              })`}
+              disabled={settings.playbackSpeed <= SPEEDS[0]}
+            >
+              <Turtle className="w-4 h-4" />
+            </IconBtn>
+            <span className="text-xs text-slate-500 min-w-8 text-center font-medium">
+              {settings.playbackSpeed}×
+            </span>
+            <IconBtn
+              onClick={() => {
+                const idx = SPEEDS.indexOf(
+                  settings.playbackSpeed as (typeof SPEEDS)[number]
+                );
+                if (idx < SPEEDS.length - 1) setPlaybackSpeed(SPEEDS[idx + 1]);
+              }}
+              tooltip={`Faster (${
+                settings.playbackSpeed >= SPEEDS[SPEEDS.length - 1]
+                  ? "max"
+                  : SPEEDS[
+                      Math.min(
+                        SPEEDS.length - 1,
+                        SPEEDS.indexOf(
+                          settings.playbackSpeed as (typeof SPEEDS)[number]
+                        ) + 1
+                      )
+                    ] + "×"
+              })`}
+              disabled={settings.playbackSpeed >= SPEEDS[SPEEDS.length - 1]}
+            >
+              <Rabbit className="w-4 h-4" />
+            </IconBtn>
+          </div>
         </div>
 
         <Separator />
