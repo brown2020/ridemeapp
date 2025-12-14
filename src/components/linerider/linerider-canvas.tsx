@@ -74,18 +74,21 @@ export function LineriderCanvas() {
     return () => ro.disconnect();
   }, []);
 
-  // Main animation loop
+  // Main animation loop and pointer handlers
   useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+
     let mounted = true;
 
     function renderLoop(nowMs: number) {
       rafRef.current = null;
       if (!mounted) return;
 
-      const el = canvasRef.current;
-      if (!el) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-      const ctx = el.getContext("2d");
+      const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
       const viewport = viewportRef.current;
@@ -95,9 +98,9 @@ export function LineriderCanvas() {
       const targetW = Math.floor(viewport.width * dpr);
       const targetH = Math.floor(viewport.height * dpr);
 
-      if (el.width !== targetW || el.height !== targetH) {
-        el.width = targetW;
-        el.height = targetH;
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
       }
 
       // Get fresh state for physics
@@ -140,13 +143,13 @@ export function LineriderCanvas() {
       // Get fresh state for rendering (may have changed during physics)
       state = useLineriderStore.getState();
 
-      // Skip render if nothing changed AND we're not playing
-      // (when playing, we always render for smooth character animations)
-      if (!needsRenderRef.current && !state.isPlaying) {
-        // Continue loop if interacting
-        if (isInteractingRef.current) {
-          rafRef.current = requestAnimationFrame(renderLoop);
-        }
+      // Always render when interacting (to show drawing in progress)
+      if (isInteractingRef.current) {
+        needsRenderRef.current = true;
+      }
+
+      // Skip render if nothing changed
+      if (!needsRenderRef.current) {
         return;
       }
       needsRenderRef.current = false;
@@ -175,7 +178,7 @@ export function LineriderCanvas() {
         drawGrid(ctx, state.camera, viewport);
       }
 
-      // Draw segments
+      // Draw segments (including current stroke being drawn)
       drawSegments(
         ctx,
         state.camera.zoom,
@@ -197,7 +200,7 @@ export function LineriderCanvas() {
       const speed = len(riderVelocity);
       drawHUD(ctx, viewport, state.elapsedTime, speed, state.isPlaying);
 
-      // Continue animation loop - always continue when playing for smooth animations
+      // Continue animation loop if playing or interacting
       const freshState = useLineriderStore.getState();
       if (freshState.isPlaying || isInteractingRef.current) {
         rafRef.current = requestAnimationFrame(renderLoop);
@@ -206,56 +209,15 @@ export function LineriderCanvas() {
 
     function requestRender() {
       needsRenderRef.current = true;
-      // Reset frame timing when starting fresh
+      // Start animation loop if not already running
       if (rafRef.current === null) {
         lastFrameMsRef.current = 0;
-        // Prime the accumulator so physics runs on the first frame
         accumulatorRef.current = PHYSICS_DT;
         rafRef.current = requestAnimationFrame(renderLoop);
       }
     }
 
-    // Subscribe to store changes
-    const unsubscribe = useLineriderStore.subscribe(
-      (s) =>
-        [
-          s.camera.pos.x,
-          s.camera.pos.y,
-          s.camera.zoom,
-          s.trackVersion,
-          s.isPlaying,
-          s.settings.isGridVisible,
-          s.rider.frame,
-          s.riderStart.x,
-          s.riderStart.y,
-          s.character,
-        ] as const,
-      () => requestRender()
-    );
-
-    // Initial render
-    requestRender();
-
-    return () => {
-      mounted = false;
-      unsubscribe();
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-    };
-  }, []);
-
-  // Pointer event handlers
-  useEffect(() => {
-    const el = canvasRef.current;
-    if (!el) return;
-
-    function requestRender() {
-      needsRenderRef.current = true;
-      // The main animation loop will pick this up
-    }
-
+    // Pointer event handlers
     function onPointerDown(e: PointerEvent) {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -383,18 +345,46 @@ export function LineriderCanvas() {
       useLineriderStore.getState().zoomAt(cursor, viewport, zoomFactor);
     }
 
+    // Subscribe to store changes
+    const unsubscribe = useLineriderStore.subscribe(
+      (s) =>
+        [
+          s.camera.pos.x,
+          s.camera.pos.y,
+          s.camera.zoom,
+          s.trackVersion,
+          s.isPlaying,
+          s.settings.isGridVisible,
+          s.rider.frame,
+          s.riderStart.x,
+          s.riderStart.y,
+          s.character,
+        ] as const,
+      () => requestRender()
+    );
+
+    // Add event listeners
     el.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
     el.addEventListener("wheel", onWheel, { passive: false });
 
+    // Initial render
+    requestRender();
+
     return () => {
+      mounted = false;
+      unsubscribe();
       el.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
       el.removeEventListener("wheel", onWheel);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
     };
   }, []);
 

@@ -10,14 +10,19 @@ function clsx(...parts: Array<string | false | null | undefined>) {
   return parts.filter(Boolean).join(" ");
 }
 
-function Button(props: Readonly<React.ComponentProps<"button">>) {
+function Button({ 
+  isActive, 
+  ...props 
+}: Readonly<React.ComponentProps<"button"> & { isActive?: boolean }>) {
   return (
     <button
       {...props}
       className={clsx(
-        "rounded-md border border-black/20 bg-white px-2 py-1 text-xs font-medium shadow-sm",
-        "hover:bg-black/5 active:bg-black/10 transition-colors",
-        "disabled:opacity-50 disabled:hover:bg-white",
+        "rounded-md border px-2 py-1 text-xs font-medium shadow-sm transition-colors",
+        isActive
+          ? "border-black/40 bg-gray-900 text-white hover:bg-gray-800"
+          : "border-black/20 bg-white text-black hover:bg-black/5 active:bg-black/10",
+        "disabled:opacity-50",
         props.className
       )}
     />
@@ -118,27 +123,21 @@ export function LineriderControls() {
         <div className="flex flex-wrap gap-2 rounded-lg border border-black/10 bg-white/90 p-2 shadow-lg backdrop-blur-sm">
           <Button
             onClick={() => setTool("draw")}
-            className={clsx(
-              tool === "draw" && "bg-black text-white hover:bg-black"
-            )}
+            isActive={tool === "draw"}
             title="Draw tool (D)"
           >
             ✏️ Draw
           </Button>
           <Button
             onClick={() => setTool("pan")}
-            className={clsx(
-              tool === "pan" && "bg-black text-white hover:bg-black"
-            )}
+            isActive={tool === "pan"}
             title="Pan tool (H/P)"
           >
             ✋ Pan
           </Button>
           <Button
             onClick={() => setTool("erase")}
-            className={clsx(
-              tool === "erase" && "bg-black text-white hover:bg-black"
-            )}
+            isActive={tool === "erase"}
             title="Erase tool (E)"
           >
             🧹 Erase
@@ -148,14 +147,14 @@ export function LineriderControls() {
 
           <Button
             onClick={toggleGrid}
-            className={clsx(settings.isGridVisible && "bg-black/10")}
+            isActive={settings.isGridVisible}
             title="Toggle grid (G)"
           >
             Grid
           </Button>
           <Button
             onClick={toggleCameraFollowing}
-            className={clsx(settings.isCameraFollowing && "bg-black/10")}
+            isActive={settings.isCameraFollowing}
             title="Follow rider (F)"
           >
             Follow
@@ -189,9 +188,7 @@ export function LineriderControls() {
         <div className="flex flex-wrap items-center gap-2 rounded-lg border border-black/10 bg-white/90 p-2 shadow-lg backdrop-blur-sm">
           <Button
             onClick={togglePlaying}
-            className={clsx(
-              isPlaying && "bg-emerald-600 text-white hover:bg-emerald-600"
-            )}
+            className={isPlaying ? "!bg-emerald-600 !text-white !hover:bg-emerald-500 !border-emerald-700" : ""}
             title="Play/Pause (Space)"
           >
             {isPlaying ? "⏸ Pause" : "▶️ Play"}
