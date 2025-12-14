@@ -111,7 +111,7 @@ export function LineriderControls() {
   };
 
   return (
-    <div className="pointer-events-none absolute inset-0">
+    <div className="pointer-events-none absolute inset-0 select-none">
       {/* Top-right user menu */}
       <div className="pointer-events-auto absolute right-3 top-3">
         <UserMenu />
