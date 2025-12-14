@@ -14,7 +14,6 @@ export function LineriderApp() {
     setTool,
     setLineType,
     togglePlaying,
-    resetRider,
     undo,
     clearTrack,
     toggleGrid,
@@ -26,7 +25,6 @@ export function LineriderApp() {
       setTool: s.setTool,
       setLineType: s.setLineType,
       togglePlaying: s.togglePlaying,
-      resetRider: s.resetRider,
       undo: s.undo,
       clearTrack: s.clearTrack,
       toggleGrid: s.toggleGrid,
@@ -94,11 +92,10 @@ export function LineriderApp() {
       }
 
       // Other actions
-      if (key === "r") resetRider();
+      if (key === "r" || key === "home" || key === "0") resetCamera();
       if (key === "c") clearTrack();
       if (key === "g") toggleGrid();
       if (key === "f") toggleCameraFollowing();
-      if (key === "home" || key === "0") resetCamera();
     }
 
     window.addEventListener("keydown", onKeyDown);
@@ -106,7 +103,6 @@ export function LineriderApp() {
   }, [
     clearTrack,
     resetCamera,
-    resetRider,
     setTool,
     setLineType,
     toggleCameraFollowing,

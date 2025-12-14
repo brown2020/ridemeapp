@@ -73,7 +73,6 @@ export function LineriderControls() {
     setLineType,
     isPlaying,
     togglePlaying,
-    resetRider,
     undo,
     clearTrack,
     settings,
@@ -89,7 +88,6 @@ export function LineriderControls() {
       setLineType: s.setLineType,
       isPlaying: s.isPlaying,
       togglePlaying: s.togglePlaying,
-      resetRider: s.resetRider,
       undo: s.undo,
       clearTrack: s.clearTrack,
       settings: s.settings,
@@ -201,9 +199,6 @@ export function LineriderControls() {
           >
             {isPlaying ? "⏸ Pause" : "▶️ Play"}
           </Button>
-          <Button onClick={resetRider} title="Reset rider (R)">
-            🔄 Reset
-          </Button>
 
           <div className="mx-1 w-px self-stretch bg-black/10" />
 
@@ -238,7 +233,7 @@ export function LineriderControls() {
             <div>🖱️ Wheel: zoom · Middle/Right drag: pan</div>
             <div>⇧ Shift+Click: set rider start position</div>
             <div>⌨️ D/H/E: tools · 1/2/3: line types · Space: play</div>
-            <div>🏠 Home/0: reset view · R: reset rider · C: clear</div>
+            <div>🏠 Home/R/0: reset all · C: clear track</div>
           </div>
         </div>
       </div>

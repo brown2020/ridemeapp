@@ -38,7 +38,6 @@ export function LineriderCanvas() {
   const lastScreenRef = useRef<Vec2>(v(0, 0));
   const lastWorldRef = useRef<Vec2>(v(0, 0));
   const strokeSegmentsRef = useRef<Array<Readonly<{ a: Vec2; b: Vec2 }>>>([]);
-  const erasePointsRef = useRef<Vec2[]>([]);
   const isInteractingRef = useRef<boolean>(false);
 
   // Animation state
@@ -249,7 +248,8 @@ export function LineriderCanvas() {
         strokeSegmentsRef.current = [];
       } else {
         pointerModeRef.current = "erase";
-        erasePointsRef.current = [world];
+        // Erase at initial click position
+        state.eraseAt(world, 15 / state.camera.zoom);
       }
 
       requestRender();
@@ -287,11 +287,9 @@ export function LineriderCanvas() {
         return;
       }
 
-      // Erase mode
-      const minDist = 6 / state.camera.zoom;
-      if (len(sub(world, lastWorldRef.current)) > minDist) {
-        erasePointsRef.current.push(world);
-      }
+      // Erase mode - erase in real-time as user drags
+      const eraseRadius = 15 / state.camera.zoom;
+      state.eraseAt(world, eraseRadius);
       lastWorldRef.current = world;
       lastScreenRef.current = screen;
       requestRender();
@@ -319,13 +317,8 @@ export function LineriderCanvas() {
         if (stroke.length > 0) {
           state.addSegments(stroke);
         }
-      } else if (mode === "erase") {
-        const points = erasePointsRef.current;
-        erasePointsRef.current = [];
-        if (points.length > 0) {
-          state.erasePath(points, 15 / state.camera.zoom);
-        }
       }
+      // Erase mode: already handled in real-time during drag
 
       pointerModeRef.current = null;
       isInteractingRef.current = false;

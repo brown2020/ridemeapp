@@ -347,7 +347,13 @@ export const useLineriderStore = create<LineriderStore>()(
 
     setCharacter: (character) => set({ character }),
 
-    resetCamera: () => set({ camera: DEFAULT_CAMERA }),
+    resetCamera: () =>
+      set((s) => ({
+        camera: DEFAULT_CAMERA,
+        rider: createSimpleRider(s.riderStart),
+        elapsedTime: 0,
+        isPlaying: false,
+      })),
 
     rebuildSpatialHash: () => {
       const s = get();
