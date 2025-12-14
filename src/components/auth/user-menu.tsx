@@ -71,7 +71,8 @@ export function UserMenu() {
     <>
       <button
         onClick={() => setShowProfileModal(true)}
-        className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 shadow-sm transition hover:bg-gray-50"
+        className="rounded-full transition hover:ring-2 hover:ring-slate-200"
+        title={displayName || auth.user?.email || "Profile"}
       >
         <Avatar
           photoURL={photoURL}
@@ -79,9 +80,6 @@ export function UserMenu() {
           email={auth.user?.email}
           size="sm"
         />
-        <span className="max-w-[120px] truncate text-sm font-medium text-gray-700">
-          {displayName || auth.user?.email?.split("@")[0]}
-        </span>
       </button>
 
       {showProfileModal && (
