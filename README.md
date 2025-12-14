@@ -57,6 +57,7 @@ Just like the classic Line Rider:
 ### 🎮 Intuitive Controls
 
 - Draw, pan, and erase tools
+- Context-aware cursors (pencil for draw, eraser for erase)
 - Mouse wheel zoom with cursor focus
 - Middle/right-click panning
 - Full keyboard shortcut support
@@ -73,12 +74,12 @@ Just like the classic Line Rider:
 
 Four unique animated characters to ride your tracks:
 
-| Character | Description |
-|-----------|-------------|
-| 🔴 **Classic Ball** | The original rider with a trailing flag |
-| 🏂 **Snowboarder** | Shredding the slopes with snow spray effects |
-| 🛹 **Skateboarder** | Kickflipping with balance arm animations |
-| 🏇 **Horse Rider** | Galloping majestically with flowing mane |
+| Character           | Description                                  |
+| ------------------- | -------------------------------------------- |
+| 🔴 **Classic Ball** | The original rider with a trailing flag      |
+| 🏂 **Snowboarder**  | Shredding the slopes with snow spray effects |
+| 🛹 **Skateboarder** | Kickflipping with balance arm animations     |
+| 🏇 **Horse Rider**  | Galloping majestically with flowing mane     |
 
 Each character features unique animations that respond to speed and movement direction.
 
@@ -89,6 +90,7 @@ Each character features unique animations that respond to speed and movement dir
 - **Email Link** — Passwordless magic link sign-in with confirmation UI
 - **User Profiles** — Customizable display names and character selection
 - **Secure by Default** — User data isolated with Firebase security rules
+- **Shared Auth State** — Auth is backed by a single Zustand store (`src/stores/auth-store.ts`) so Firebase subscriptions are shared across the app
 
 ---
 
@@ -150,14 +152,14 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 
 ### Environment Variables Reference
 
-| Variable                                 | Required | Description                      |
-| ---------------------------------------- | -------- | -------------------------------- |
-| `NEXT_PUBLIC_FIREBASE_API_KEY`           | Optional | Firebase Web API key             |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`       | Optional | Firebase auth domain             |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`        | Optional | Firebase project identifier      |
-| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`    | Optional | Firebase storage bucket URL      |
+| Variable                                   | Required | Description                        |
+| ------------------------------------------ | -------- | ---------------------------------- |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`             | Optional | Firebase Web API key               |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`         | Optional | Firebase auth domain               |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID`          | Optional | Firebase project identifier        |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`      | Optional | Firebase storage bucket URL        |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Optional | Firebase Cloud Messaging sender ID |
-| `NEXT_PUBLIC_FIREBASE_APP_ID`            | Optional | Firebase app identifier          |
+| `NEXT_PUBLIC_FIREBASE_APP_ID`              | Optional | Firebase app identifier            |
 
 ### Firebase Security Rules
 
@@ -168,6 +170,7 @@ The repository includes pre-configured security rules for Firestore and Storage.
 1. Go to [Firebase Console](https://console.firebase.google.com/) and select your project
 
 2. **For Firestore Database:**
+
    - Navigate to **Firestore Database → Rules**
    - Copy the contents of `firestore.rules` and paste into the editor
    - Click **Publish**
@@ -191,12 +194,12 @@ Storage:
 
 #### Security Features
 
-| Feature | Description |
-|---------|-------------|
+| Feature            | Description                                           |
+| ------------------ | ----------------------------------------------------- |
 | **User isolation** | Users can only read/write under `/users/{their-uid}/` |
-| **Auth required** | All operations require authentication |
-| **UID matching** | `request.auth.uid == uid` ensures ownership |
-| **Default deny** | Any path not explicitly matched is blocked |
+| **Auth required**  | All operations require authentication                 |
+| **UID matching**   | `request.auth.uid == uid` ensures ownership           |
+| **Default deny**   | Any path not explicitly matched is blocked            |
 
 ---
 
@@ -259,7 +262,7 @@ ridemeapp/
 │   │       └── linerider-controls.tsx # UI controls panel
 │   │
 │   ├── hooks/
-│   │   └── use-auth.ts             # Firebase auth React hook
+│   │   └── use-auth.ts             # Thin hook wrapper over auth store
 │   │
 │   ├── lib/
 │   │   ├── firebase/               # Firebase integration
@@ -278,7 +281,8 @@ ridemeapp/
 │   │       └── types.ts            # TypeScript type definitions
 │   │
 │   └── stores/
-│       └── linerider-store.ts      # Zustand state management
+│       ├── auth-store.ts           # Auth state + single Firebase subscription
+│       └── linerider-store.ts      # Game state management
 │
 ├── public/                         # Static assets
 ├── env.example                     # Environment template
@@ -295,25 +299,25 @@ ridemeapp/
 
 ## 🛠️ Tech Stack
 
-| Technology                                    | Version  | Purpose                         |
-| --------------------------------------------- | -------- | ------------------------------- |
-| [Next.js](https://nextjs.org/)                | 16.0.10  | React framework with App Router |
-| [React](https://react.dev/)                   | 19.2.3   | UI component library            |
-| [TypeScript](https://www.typescriptlang.org/) | 5.x      | Type-safe JavaScript            |
-| [Zustand](https://zustand-demo.pmnd.rs/)      | 5.0.9    | Lightweight state management    |
-| [Firebase](https://firebase.google.com/)      | 12.6.0   | Authentication & database       |
-| [Tailwind CSS](https://tailwindcss.com/)      | 4.1.18   | Utility-first CSS framework     |
-| [PostCSS](https://postcss.org/)               | 8.x      | CSS transformation pipeline     |
-| [ESLint](https://eslint.org/)                 | 9.39.2   | Code linting (flat config)      |
+| Technology                                    | Version | Purpose                         |
+| --------------------------------------------- | ------- | ------------------------------- |
+| [Next.js](https://nextjs.org/)                | 16.0.10 | React framework with App Router |
+| [React](https://react.dev/)                   | 19.2.3  | UI component library            |
+| [TypeScript](https://www.typescriptlang.org/) | 5.x     | Type-safe JavaScript            |
+| [Zustand](https://zustand-demo.pmnd.rs/)      | 5.0.9   | Lightweight state management    |
+| [Firebase](https://firebase.google.com/)      | 12.6.0  | Authentication & database       |
+| [Tailwind CSS](https://tailwindcss.com/)      | 4.1.18  | Utility-first CSS framework     |
+| [PostCSS](https://postcss.org/)               | 8.x     | CSS transformation pipeline     |
+| [ESLint](https://eslint.org/)                 | 9.39.2  | Code linting (flat config)      |
 
 ### Development Dependencies
 
-| Package                | Version | Purpose                     |
-| ---------------------- | ------- | --------------------------- |
-| `@tailwindcss/postcss` | 4.1.18  | Tailwind PostCSS plugin     |
-| `@types/node`          | 25.0.1  | Node.js type definitions    |
-| `@types/react`         | 19.2.7  | React type definitions      |
-| `@types/react-dom`     | 19.2.3  | React DOM type definitions  |
+| Package                | Version | Purpose                      |
+| ---------------------- | ------- | ---------------------------- |
+| `@tailwindcss/postcss` | 4.1.18  | Tailwind PostCSS plugin      |
+| `@types/node`          | 25.0.1  | Node.js type definitions     |
+| `@types/react`         | 19.2.7  | React type definitions       |
+| `@types/react-dom`     | 19.2.3  | React DOM type definitions   |
 | `eslint-config-next`   | 16.0.10 | Next.js ESLint configuration |
 
 ---
@@ -337,15 +341,15 @@ position = add(position, add(velocity, gravity));
 
 #### Physics Constants
 
-| Constant         | Value   | Description                        |
-| ---------------- | ------- | ---------------------------------- |
-| Gravity          | 0.25    | World units per tick               |
-| Substeps         | 8       | Physics iterations per frame       |
-| Rider Radius     | 10      | Collision detection radius         |
-| Normal Friction  | 0.02    | Blue line friction coefficient     |
-| Accel Friction   | 0.0     | Red line friction (frictionless)   |
-| Accel Boost      | 0.05    | Red line acceleration multiplier   |
-| Max Velocity     | 40      | Prevents tunneling through lines   |
+| Constant        | Value | Description                      |
+| --------------- | ----- | -------------------------------- |
+| Gravity         | 0.25  | World units per tick             |
+| Substeps        | 8     | Physics iterations per frame     |
+| Rider Radius    | 10    | Collision detection radius       |
+| Normal Friction | 0.02  | Blue line friction coefficient   |
+| Accel Friction  | 0.0   | Red line friction (frictionless) |
+| Accel Boost     | 0.05  | Red line acceleration multiplier |
+| Max Velocity    | 40    | Prevents tunneling through lines |
 
 ### Collision Detection
 
@@ -452,11 +456,13 @@ npm run build
 ### Ideas for Contributions
 
 #### 🎯 High Priority
+
 - [ ] **Save/Load Tracks** — Persist tracks to localStorage or Firestore
 - [ ] **Touch Support** — Mobile-friendly drawing and gestures
 - [ ] **Track Sharing** — Generate shareable URLs for tracks
 
 #### 🚀 Features
+
 - [ ] **Public Track Gallery** — Browse community-created tracks
 - [ ] **Line Snapping** — Snap endpoints to grid or existing points
 - [ ] **Replay System** — Record and share ride replays
@@ -465,12 +471,14 @@ npm run build
 - [ ] **Multi-rider** — Simulate multiple riders simultaneously
 
 #### 🎨 Polish
+
 - [ ] **Sound Effects** — Audio feedback for collisions and speed
 - [ ] **Dark Mode** — System-aware theme switching
 - [ ] **Themes** — Custom color schemes for lines and UI
 - [ ] **Animations** — UI micro-interactions and transitions
 
 #### 🔧 Technical
+
 - [ ] **Performance** — WebGL renderer for large tracks
 - [ ] **Testing** — Unit tests for physics engine
 - [ ] **PWA** — Offline support and installability
