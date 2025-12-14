@@ -328,8 +328,10 @@ export function getRiderVelocity(rider: RiderState): Vec2 {
 
 /**
  * Check if rider is out of bounds
+ * Uses very large bounds to allow for extended tracks
  */
 export function isRiderOutOfBounds(rider: RiderState): boolean {
   const center = getRiderCenter(rider);
-  return center.y > 10000 || center.x < -50000 || center.x > 50000;
+  // Allow falling very far (100,000 units down) and traveling far horizontally (±500,000)
+  return center.y > 100000 || center.x < -500000 || center.x > 500000;
 }
