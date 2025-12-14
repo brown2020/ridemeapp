@@ -15,6 +15,7 @@ import {
   buildSpatialHash,
   type SpatialHash,
 } from "@/lib/linerider/spatial-hash";
+import type { CharacterType } from "@/lib/linerider/characters";
 
 export type ToolMode = "draw" | "pan" | "erase";
 
@@ -39,6 +40,7 @@ type LineriderState = Readonly<{
   rider: RiderState;
   riderStart: Vec2;
   elapsedTime: number;
+  character: CharacterType;
 
   settings: LineriderSettings;
 
@@ -76,6 +78,7 @@ type LineriderActions = Readonly<{
   setCameraFollowing: (isCameraFollowing: boolean) => void;
   toggleCameraFollowing: () => void;
   setPlaybackSpeed: (speed: number) => void;
+  setCharacter: (character: CharacterType) => void;
 
   /** Rebuild spatial hash cache */
   rebuildSpatialHash: () => void;
@@ -110,6 +113,7 @@ export const useLineriderStore = create<LineriderStore>()(
     rider: createSimpleRider(DEFAULT_RIDER_START),
     riderStart: DEFAULT_RIDER_START,
     elapsedTime: 0,
+    character: "ball" as CharacterType,
 
     settings: DEFAULT_SETTINGS,
 
@@ -337,6 +341,8 @@ export const useLineriderStore = create<LineriderStore>()(
 
     setPlaybackSpeed: (speed) =>
       set((s) => ({ settings: { ...s.settings, playbackSpeed: speed } })),
+
+    setCharacter: (character) => set({ character }),
 
     rebuildSpatialHash: () => {
       const s = get();

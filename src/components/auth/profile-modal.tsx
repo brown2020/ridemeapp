@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import type { UseAuthReturn } from "@/hooks/use-auth";
 import { Avatar } from "./avatar";
+import { CharacterSelector } from "./character-selector";
+import type { CharacterType } from "@/lib/linerider/characters";
+import { useLineriderStore } from "@/stores/linerider-store";
 
 interface ProfileModalProps {
   auth: UseAuthReturn;
@@ -13,11 +16,30 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
   const [displayName, setDisplayName] = useState(
     auth.profile?.displayName || ""
   );
+  const [character, setCharacter] = useState<CharacterType>(
+    auth.profile?.character || "ball"
+  );
   const [saved, setSaved] = useState(false);
+  
+  // Get the store's setCharacter to update game in real-time
+  const setStoreCharacter = useLineriderStore((s) => s.setCharacter);
+
+  // Sync character from profile when it changes (e.g., on initial load)
+  useEffect(() => {
+    if (auth.profile?.character) {
+      setCharacter(auth.profile.character);
+    }
+  }, [auth.profile?.character]);
+
+  // Handler to update both local state AND the game store immediately
+  const handleCharacterSelect = (newCharacter: CharacterType) => {
+    setCharacter(newCharacter);
+    setStoreCharacter(newCharacter); // Update game immediately
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await auth.updateProfile(displayName);
+    await auth.updateProfile(displayName, character);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -100,6 +122,12 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
               placeholder="Your name"
             />
           </div>
+
+          {/* Character selector */}
+          <CharacterSelector
+            selectedCharacter={character}
+            onSelect={handleCharacterSelect}
+          />
 
           <button
             type="submit"

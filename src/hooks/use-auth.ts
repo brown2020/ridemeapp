@@ -15,6 +15,7 @@ import {
   isFirebaseConfigured,
   type UserProfile,
 } from "@/lib/firebase";
+import type { CharacterType } from "@/lib/linerider/characters";
 
 interface AuthState {
   user: User | null;
@@ -30,7 +31,7 @@ interface AuthActions {
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   sendEmailLink: (email: string) => Promise<boolean>;
   signOut: () => Promise<void>;
-  updateProfile: (displayName: string) => Promise<void>;
+  updateProfile: (displayName: string, character?: CharacterType) => Promise<void>;
   clearError: () => void;
 }
 
@@ -212,13 +213,14 @@ export function useAuth(): UseAuthReturn {
   }, []);
 
   const handleUpdateProfile = useCallback(
-    async (displayName: string) => {
+    async (displayName: string, character?: CharacterType) => {
       if (!state.user) return;
 
       setState((prev) => ({ ...prev, isLoading: true, error: null }));
       try {
         const profile = await createOrUpdateUserProfile(state.user, {
           displayName,
+          character,
         });
         setState((prev) => ({ ...prev, profile, isLoading: false }));
       } catch (error) {

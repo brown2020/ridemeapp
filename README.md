@@ -69,12 +69,25 @@ Just like the classic Line Rider:
 - Visual start position marker
 - Grid overlay (toggleable)
 
+### 🎭 Choose Your Character
+
+Four unique animated characters to ride your tracks:
+
+| Character | Description |
+|-----------|-------------|
+| 🔴 **Classic Ball** | The original rider with a trailing flag |
+| 🏂 **Snowboarder** | Shredding the slopes with snow spray effects |
+| 🛹 **Skateboarder** | Kickflipping with balance arm animations |
+| 🏇 **Horse Rider** | Galloping majestically with flowing mane |
+
+Each character features unique animations that respond to speed and movement direction.
+
 ### 🔐 User Authentication (Optional)
 
 - **Google Sign-In** — One-click authentication
 - **Email/Password** — Traditional account creation
 - **Email Link** — Passwordless magic link sign-in with confirmation UI
-- **User Profiles** — Customizable display names
+- **User Profiles** — Customizable display names and character selection
 - **Secure by Default** — User data isolated with Firebase security rules
 
 ---
@@ -235,6 +248,7 @@ ridemeapp/
 │   │   ├── auth/                   # Authentication UI components
 │   │   │   ├── auth-modal.tsx      # Sign-in/sign-up modal
 │   │   │   ├── avatar.tsx          # User avatar component
+│   │   │   ├── character-selector.tsx # Animated character picker
 │   │   │   ├── profile-modal.tsx   # User profile editor
 │   │   │   ├── user-menu.tsx       # User menu dropdown
 │   │   │   └── index.ts            # Barrel exports
@@ -255,6 +269,7 @@ ridemeapp/
 │   │   │   └── index.ts            # Barrel exports
 │   │   │
 │   │   └── linerider/              # Core physics & rendering
+│   │       ├── characters.ts       # Character definitions & animations
 │   │       ├── math.ts             # Vector math utilities (Vec2, Segment)
 │   │       ├── physics.ts          # Verlet physics engine
 │   │       ├── renderer.ts         # Canvas 2D rendering pipeline

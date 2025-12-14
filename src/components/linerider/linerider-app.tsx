@@ -5,8 +5,11 @@ import { LineriderCanvas } from "@/components/linerider/linerider-canvas";
 import { LineriderControls } from "@/components/linerider/linerider-controls";
 import { useLineriderStore } from "@/stores/linerider-store";
 import { useShallow } from "zustand/react/shallow";
+import { useAuth } from "@/hooks/use-auth";
 
 export function LineriderApp() {
+  const auth = useAuth();
+  
   const {
     setTool,
     setLineType,
@@ -16,6 +19,7 @@ export function LineriderApp() {
     clearTrack,
     toggleGrid,
     toggleCameraFollowing,
+    setCharacter,
   } = useLineriderStore(
     useShallow((s) => ({
       setTool: s.setTool,
@@ -26,8 +30,18 @@ export function LineriderApp() {
       clearTrack: s.clearTrack,
       toggleGrid: s.toggleGrid,
       toggleCameraFollowing: s.toggleCameraFollowing,
+      setCharacter: s.setCharacter,
     }))
   );
+
+  // Sync character from user profile when profile loads or changes
+  useEffect(() => {
+    if (auth.profile) {
+      // User is logged in and profile is loaded - use their saved character
+      setCharacter(auth.profile.character || "ball");
+    }
+    // If no profile (not logged in), keep the current character selection
+  }, [auth.profile, setCharacter]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {

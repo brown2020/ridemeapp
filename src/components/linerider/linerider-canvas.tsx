@@ -3,7 +3,6 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import {
   useLineriderStore,
-  getRiderCenter,
   getRiderVelocity,
 } from "@/stores/linerider-store";
 import type { Viewport } from "@/lib/linerider/types";
@@ -12,11 +11,11 @@ import { screenToWorld } from "@/lib/linerider/transform";
 import {
   drawGrid,
   drawSegments,
-  drawSimpleRider,
   drawStartFlag,
   drawHUD,
   buildSegmentPaths,
 } from "@/lib/linerider/renderer";
+import { drawCharacter } from "@/lib/linerider/characters";
 
 type PointerMode = "draw" | "pan" | "erase" | null;
 
@@ -130,6 +129,7 @@ export function LineriderCanvas() {
         if (accumulatorRef.current > PHYSICS_DT * 2) {
           accumulatorRef.current = PHYSICS_DT;
         }
+        // Always need to render when playing (for character animations)
         needsRenderRef.current = true;
       } else {
         // Reset timing when not playing so we don't get huge dt on resume
@@ -140,10 +140,11 @@ export function LineriderCanvas() {
       // Get fresh state for rendering (may have changed during physics)
       state = useLineriderStore.getState();
 
-      // Skip render if nothing changed
-      if (!needsRenderRef.current) {
-        // Always continue loop if playing or interacting
-        if (state.isPlaying || isInteractingRef.current) {
+      // Skip render if nothing changed AND we're not playing
+      // (when playing, we always render for smooth character animations)
+      if (!needsRenderRef.current && !state.isPlaying) {
+        // Continue loop if interacting
+        if (isInteractingRef.current) {
           rafRef.current = requestAnimationFrame(renderLoop);
         }
         return;
@@ -186,10 +187,9 @@ export function LineriderCanvas() {
       // Draw start flag
       drawStartFlag(ctx, state.camera.zoom, state.riderStart);
 
-      // Draw rider
-      const riderCenter = getRiderCenter(state.rider);
+      // Draw rider with selected character
       const riderVelocity = getRiderVelocity(state.rider);
-      drawSimpleRider(ctx, state.camera.zoom, riderCenter, riderVelocity);
+      drawCharacter(ctx, state.camera.zoom, state.rider, state.character, riderVelocity);
 
       ctx.restore();
 
@@ -197,9 +197,9 @@ export function LineriderCanvas() {
       const speed = len(riderVelocity);
       drawHUD(ctx, viewport, state.elapsedTime, speed, state.isPlaying);
 
-      // Continue animation loop - check fresh state
-      const currentlyPlaying = useLineriderStore.getState().isPlaying;
-      if (currentlyPlaying || isInteractingRef.current) {
+      // Continue animation loop - always continue when playing for smooth animations
+      const freshState = useLineriderStore.getState();
+      if (freshState.isPlaying || isInteractingRef.current) {
         rafRef.current = requestAnimationFrame(renderLoop);
       }
     }
@@ -228,6 +228,7 @@ export function LineriderCanvas() {
           s.rider.frame,
           s.riderStart.x,
           s.riderStart.y,
+          s.character,
         ] as const,
       () => requestRender()
     );

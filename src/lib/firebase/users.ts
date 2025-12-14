@@ -8,6 +8,7 @@ import {
 } from "firebase/firestore";
 import { getFirebaseDb } from "./config";
 import type { User } from "firebase/auth";
+import type { CharacterType } from "@/lib/linerider/characters";
 
 /**
  * User profile stored in Firestore
@@ -17,6 +18,7 @@ export interface UserProfile {
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
+  character: CharacterType;
   createdAt: Timestamp | null;
   updatedAt: Timestamp | null;
 }
@@ -27,6 +29,7 @@ export interface UserProfile {
 export interface UserProfileData {
   displayName?: string;
   photoURL?: string;
+  character?: CharacterType;
 }
 
 /**
@@ -71,6 +74,7 @@ export async function createOrUpdateUserProfile(
       email: user.email,
       displayName: additionalData?.displayName || user.displayName,
       photoURL: additionalData?.photoURL || user.photoURL,
+      character: additionalData?.character || "ball",
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -84,24 +88,41 @@ export async function createOrUpdateUserProfile(
     } as UserProfile;
   }
 
+  // Get existing data
+  const existingData = docSnap.data();
+  
   // Update existing profile with any new data from auth
   const updates: Record<string, unknown> = {
     email: user.email,
     updatedAt: serverTimestamp(),
   };
 
-  // Only update displayName/photoURL if provided or if currently null
+  // Only update displayName/photoURL if provided
   if (additionalData?.displayName) {
     updates.displayName = additionalData.displayName;
   }
   if (additionalData?.photoURL) {
     updates.photoURL = additionalData.photoURL;
   }
+  if (additionalData?.character) {
+    updates.character = additionalData.character;
+  }
+  
+  // Ensure character field exists (for profiles created before this feature)
+  if (!existingData.character) {
+    updates.character = "ball";
+  }
 
   await updateDoc(docRef, updates);
 
   const updatedSnap = await getDoc(docRef);
-  return updatedSnap.data() as UserProfile;
+  const profile = updatedSnap.data() as UserProfile;
+  
+  // Ensure character is set in returned profile
+  return {
+    ...profile,
+    character: profile.character || "ball",
+  };
 }
 
 /**
