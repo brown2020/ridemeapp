@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
-import {
-  useLineriderStore,
-  getRiderVelocity,
-} from "@/stores/linerider-store";
+import { useLineriderStore, getRiderVelocity } from "@/stores/linerider-store";
 import type { Viewport } from "@/lib/linerider/types";
 import { sub, len, v, type Vec2 } from "@/lib/linerider/math";
 import { screenToWorld } from "@/lib/linerider/transform";
@@ -191,7 +188,13 @@ export function LineriderCanvas() {
 
       // Draw rider with selected character
       const riderVelocity = getRiderVelocity(state.rider);
-      drawCharacter(ctx, state.camera.zoom, state.rider, state.character, riderVelocity);
+      drawCharacter(
+        ctx,
+        state.camera.zoom,
+        state.rider,
+        state.character,
+        riderVelocity
+      );
 
       ctx.restore();
 
@@ -384,10 +387,12 @@ export function LineriderCanvas() {
   // Custom eraser cursor using Lucide's eraser icon SVG as data URI
   // (CSS cursors require images, not React components)
   const eraserCursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23fff' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21'/%3E%3Cpath d='M22 21H7'/%3E%3Cpath d='m5 11 9 9'/%3E%3C/svg%3E") 4 20, auto`;
+  const pencilCursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23fff' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E") 2 22, auto`;
 
   const getCursorClass = () => {
     if (tool === "pan") return "cursor-grab active:cursor-grabbing";
-    if (tool === "erase") return ""; // Will use inline style for custom cursor
+    // erase + draw use inline SVG cursors
+    if (tool === "erase" || tool === "draw") return "";
     return "cursor-crosshair";
   };
 
@@ -398,7 +403,13 @@ export function LineriderCanvas() {
         "absolute inset-0 h-full w-full touch-none",
         getCursorClass(),
       ].join(" ")}
-      style={tool === "erase" ? { cursor: eraserCursor } : undefined}
+      style={
+        tool === "erase"
+          ? { cursor: eraserCursor }
+          : tool === "draw"
+          ? { cursor: pencilCursor }
+          : undefined
+      }
       onContextMenu={(e) => e.preventDefault()}
       aria-label="OpenRider canvas"
       role="img"
