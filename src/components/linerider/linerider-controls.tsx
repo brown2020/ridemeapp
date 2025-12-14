@@ -1,71 +1,69 @@
 "use client";
 
-import type React from "react";
+import { useState } from "react";
 import { useLineriderStore } from "@/stores/linerider-store";
 import { useShallow } from "zustand/react/shallow";
-import type { LineType } from "@/lib/linerider/math";
 import { UserMenu } from "@/components/auth";
+import {
+  Pencil,
+  Hand,
+  Eraser,
+  Play,
+  Pause,
+  Grid3X3,
+  Focus,
+  Home,
+  Undo2,
+  Trash2,
+  HelpCircle,
+  ChevronDown,
+  ChevronUp,
+  X,
+  Zap,
+  Minus,
+  Sparkles,
+} from "lucide-react";
 
-function clsx(...parts: Array<string | false | null | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
-
-function Button({ 
-  isActive, 
-  ...props 
-}: Readonly<React.ComponentProps<"button"> & { isActive?: boolean }>) {
-  return (
-    <button
-      {...props}
-      className={clsx(
-        "rounded-md border px-2 py-1 text-xs font-medium shadow-sm transition-colors",
-        isActive
-          ? "border-black/40 bg-gray-900 text-white hover:bg-gray-800"
-          : "border-black/20 bg-white text-black hover:bg-black/5 active:bg-black/10",
-        "disabled:opacity-50",
-        props.className
-      )}
-    />
-  );
-}
-
-function LineTypeButton({
-  type,
-  label,
-  color,
-  shortcut,
-  currentType,
-  onClick,
-}: {
-  type: LineType;
-  label: string;
-  color: string;
-  shortcut: string;
-  currentType: LineType;
-  onClick: () => void;
+// Icon button component
+function IconBtn({
+  active,
+  variant,
+  children,
+  tooltip,
+  ...props
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  active?: boolean;
+  variant?: "default" | "primary" | "danger";
+  tooltip?: string;
 }) {
-  const isActive = currentType === type;
+  let classes =
+    "relative h-9 px-2.5 flex items-center gap-1.5 text-sm font-medium rounded-md transition-all duration-150 ";
+
+  if (variant === "primary") {
+    classes += "bg-slate-700 text-white hover:bg-slate-600 shadow-sm";
+  } else if (variant === "danger") {
+    classes += "text-slate-500 hover:text-red-600 hover:bg-red-50";
+  } else if (active) {
+    classes += "bg-slate-100 text-slate-900 shadow-inner";
+  } else {
+    classes += "text-slate-600 hover:text-slate-900 hover:bg-slate-50";
+  }
+
   return (
-    <button
-      onClick={onClick}
-      className={clsx(
-        "flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition-colors",
-        isActive
-          ? "border-black/40 bg-black/5"
-          : "border-black/10 bg-white hover:bg-black/5"
-      )}
-    >
-      <span
-        className="h-2.5 w-2.5 rounded-full"
-        style={{ backgroundColor: color }}
-      />
-      {label}
-      <span className="opacity-50">({shortcut})</span>
+    <button className={classes} title={tooltip} {...props}>
+      {children}
     </button>
   );
 }
 
+// Separator component
+function Separator() {
+  return <div className="w-px h-6 bg-slate-200 mx-1" />;
+}
+
 export function LineriderControls() {
+  const [showHelp, setShowHelp] = useState(false);
+
   const {
     tool,
     setTool,
@@ -98,145 +96,249 @@ export function LineriderControls() {
     }))
   );
 
-  const toolHints = {
-    draw: "Draw: drag to create lines",
-    pan: "Pan: drag to move view",
-    erase: "Erase: drag to remove lines",
-  };
-
-  const lineTypeInfo = {
-    normal: { color: "#4488ff", label: "Normal", shortcut: "1" },
-    accel: { color: "#cc2222", label: "Speed", shortcut: "2" },
-    scenery: { color: "#22aa44", label: "Scenery", shortcut: "3" },
-  };
-
   return (
     <div className="pointer-events-none absolute inset-0 select-none">
-      {/* Top-right user menu */}
-      <div className="pointer-events-auto absolute right-3 top-3">
-        <UserMenu />
-      </div>
+      {/* Toolbar */}
+      <div className="pointer-events-auto absolute left-3 right-3 top-3 flex items-center gap-1 rounded-xl border border-slate-200/80 bg-white/95 backdrop-blur-sm px-2 py-1.5 shadow-lg shadow-slate-200/50">
+        {/* Logo & Help */}
+        <IconBtn onClick={() => setShowHelp(!showHelp)} tooltip="Help">
+          <span className="font-semibold text-slate-800">Ride.me</span>
+          {showHelp ? (
+            <ChevronUp className="w-4 h-4 text-slate-400" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-400" />
+          )}
+        </IconBtn>
 
-      {/* Top-left controls */}
-      <div className="pointer-events-auto absolute left-3 top-3 flex flex-col gap-2">
-        {/* Tool bar */}
-        <div className="flex flex-wrap gap-2 rounded-lg border border-black/10 bg-white/90 p-2 shadow-lg backdrop-blur-sm">
-          <Button
+        <Separator />
+
+        {/* Drawing Tools */}
+        <div className="flex items-center gap-0.5 bg-slate-50 rounded-lg p-0.5">
+          <IconBtn
+            active={tool === "draw"}
             onClick={() => setTool("draw")}
-            isActive={tool === "draw"}
-            title="Draw tool (D)"
+            tooltip="Draw (D)"
           >
-            ✏️ Draw
-          </Button>
-          <Button
+            <Pencil className="w-4 h-4" />
+          </IconBtn>
+          <IconBtn
+            active={tool === "pan"}
             onClick={() => setTool("pan")}
-            isActive={tool === "pan"}
-            title="Pan tool (H/P)"
+            tooltip="Pan (H)"
           >
-            ✋ Pan
-          </Button>
-          <Button
+            <Hand className="w-4 h-4" />
+          </IconBtn>
+          <IconBtn
+            active={tool === "erase"}
             onClick={() => setTool("erase")}
-            isActive={tool === "erase"}
-            title="Erase tool (E)"
+            tooltip="Erase (E)"
           >
-            🧹 Erase
-          </Button>
-
-          <div className="mx-1 w-px self-stretch bg-black/10" />
-
-          <Button
-            onClick={toggleGrid}
-            isActive={settings.isGridVisible}
-            title="Toggle grid (G)"
-          >
-            Grid
-          </Button>
-          <Button
-            onClick={toggleCameraFollowing}
-            isActive={settings.isCameraFollowing}
-            title="Follow rider (F)"
-          >
-            Follow
-          </Button>
-          <Button
-            onClick={resetCamera}
-            title="Reset view to start (Home)"
-          >
-            🏠 Home
-          </Button>
+            <Eraser className="w-4 h-4" />
+          </IconBtn>
         </div>
 
-        {/* Line type selector (only visible in draw mode) */}
+        {/* Line Types - only in draw mode */}
         {tool === "draw" && (
-          <div className="flex flex-wrap gap-2 rounded-lg border border-black/10 bg-white/90 p-2 shadow-lg backdrop-blur-sm">
-            <span className="self-center text-xs text-black/60">Line:</span>
-            {(
-              Object.entries(lineTypeInfo) as [
-                LineType,
-                typeof lineTypeInfo.normal
-              ][]
-            ).map(([type, info]) => (
-              <LineTypeButton
-                key={type}
-                type={type}
-                label={info.label}
-                color={info.color}
-                shortcut={info.shortcut}
-                currentType={lineType}
-                onClick={() => setLineType(type)}
-              />
-            ))}
-          </div>
+          <>
+            <Separator />
+            <div className="flex items-center gap-0.5 bg-slate-50 rounded-lg p-0.5">
+              <IconBtn
+                active={lineType === "normal"}
+                onClick={() => setLineType("normal")}
+                tooltip="Normal line (1)"
+              >
+                <Minus className="w-4 h-4 text-blue-500" />
+                <span className="text-xs">Normal</span>
+              </IconBtn>
+              <IconBtn
+                active={lineType === "accel"}
+                onClick={() => setLineType("accel")}
+                tooltip="Speed boost (2)"
+              >
+                <Zap className="w-4 h-4 text-amber-500" />
+                <span className="text-xs">Speed</span>
+              </IconBtn>
+              <IconBtn
+                active={lineType === "scenery"}
+                onClick={() => setLineType("scenery")}
+                tooltip="Decoration (3)"
+              >
+                <Sparkles className="w-4 h-4 text-emerald-500" />
+                <span className="text-xs">Decor</span>
+              </IconBtn>
+            </div>
+          </>
         )}
 
-        {/* Playback controls */}
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-black/10 bg-white/90 p-2 shadow-lg backdrop-blur-sm">
-          <Button
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Playback Controls */}
+        <div className="flex items-center gap-1.5">
+          <IconBtn
+            variant="primary"
             onClick={togglePlaying}
-            className={isPlaying ? "!bg-emerald-600 !text-white !hover:bg-emerald-500 !border-emerald-700" : ""}
-            title="Play/Pause (Space)"
+            tooltip={isPlaying ? "Pause (Space)" : "Play (Space)"}
           >
-            {isPlaying ? "⏸ Pause" : "▶️ Play"}
-          </Button>
-
-          <div className="mx-1 w-px self-stretch bg-black/10" />
-
-          <span className="text-xs text-black/60">Speed:</span>
+            {isPlaying ? (
+              <Pause className="w-4 h-4" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+          </IconBtn>
           <select
             value={settings.playbackSpeed}
             onChange={(e) => setPlaybackSpeed(Number(e.target.value))}
-            className="rounded border border-black/20 bg-white px-1.5 py-0.5 text-xs"
+            className="h-9 px-2 text-sm font-medium rounded-md border border-slate-200 bg-white text-slate-600 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-slate-200 cursor-pointer"
           >
-            <option value={0.25}>0.25x</option>
-            <option value={0.5}>0.5x</option>
-            <option value={1}>1x</option>
-            <option value={2}>2x</option>
-            <option value={4}>4x</option>
+            <option value={0.25}>0.25×</option>
+            <option value={0.5}>0.5×</option>
+            <option value={1}>1×</option>
+            <option value={2}>2×</option>
+            <option value={4}>4×</option>
           </select>
-
-          <div className="mx-1 w-px self-stretch bg-black/10" />
-
-          <Button onClick={undo} title="Undo (⌘/Ctrl+Z)">
-            ↩️ Undo
-          </Button>
-          <Button onClick={clearTrack} title="Clear all (C)">
-            🗑️ Clear
-          </Button>
         </div>
 
-        {/* Help text */}
-        <div className="max-w-[400px] rounded-lg border border-black/10 bg-white/90 p-2 text-xs text-black/70 shadow-lg backdrop-blur-sm">
-          <div className="font-semibold text-black">OpenRider</div>
-          <div className="mt-1">{toolHints[tool]}</div>
-          <div className="mt-1 space-y-0.5 text-[10px] opacity-80">
-            <div>🖱️ Wheel: zoom · Middle/Right drag: pan</div>
-            <div>⇧ Shift+Click: set rider start position</div>
-            <div>⌨️ D/H/E: tools · 1/2/3: line types · Space: play</div>
-            <div>🏠 Home/R/0: reset all · C: clear track</div>
+        <Separator />
+
+        {/* View Controls */}
+        <div className="flex items-center gap-0.5">
+          <IconBtn
+            active={settings.isGridVisible}
+            onClick={toggleGrid}
+            tooltip="Toggle grid (G)"
+          >
+            <Grid3X3 className="w-4 h-4" />
+          </IconBtn>
+          <IconBtn
+            active={settings.isCameraFollowing}
+            onClick={toggleCameraFollowing}
+            tooltip="Follow rider (F)"
+          >
+            <Focus className="w-4 h-4" />
+          </IconBtn>
+          <IconBtn onClick={resetCamera} tooltip="Reset view (Home)">
+            <Home className="w-4 h-4" />
+          </IconBtn>
+        </div>
+
+        <Separator />
+
+        {/* Actions */}
+        <div className="flex items-center gap-0.5">
+          <IconBtn onClick={undo} tooltip="Undo (⌘Z)">
+            <Undo2 className="w-4 h-4" />
+          </IconBtn>
+          <IconBtn variant="danger" onClick={clearTrack} tooltip="Clear all">
+            <Trash2 className="w-4 h-4" />
+          </IconBtn>
+        </div>
+
+        <Separator />
+
+        {/* User */}
+        <UserMenu />
+      </div>
+
+      {/* Help Panel */}
+      {showHelp && (
+        <div className="pointer-events-auto absolute left-3 top-16 w-[420px] rounded-xl border border-slate-200/80 bg-white/95 backdrop-blur-sm p-5 shadow-xl shadow-slate-200/50">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-slate-400" />
+              <span className="font-semibold text-slate-800">
+                Getting Started
+              </span>
+            </div>
+            <button
+              onClick={() => setShowHelp(false)}
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-4 text-sm">
+            <div className="p-3 bg-slate-50 rounded-lg">
+              <div className="font-medium text-slate-700 mb-2">Line Types</div>
+              <div className="flex flex-col gap-1.5 text-slate-600">
+                <span className="flex items-center gap-2">
+                  <Minus className="w-4 h-4 text-blue-500" />
+                  <span>
+                    <strong>Normal</strong> — rider can grind with friction
+                  </span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <span>
+                    <strong>Speed</strong> — gives a boost on contact
+                  </span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-emerald-500" />
+                  <span>
+                    <strong>Decor</strong> — visual only, no collision
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <div className="font-medium text-slate-700 mb-2">Mouse</div>
+                <div className="text-slate-600 space-y-1">
+                  <div>Left drag → draw/erase</div>
+                  <div>Scroll → zoom</div>
+                  <div>Right drag → pan</div>
+                  <div>Shift+click → set start</div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <div className="font-medium text-slate-700 mb-2">Keyboard</div>
+                <div className="text-slate-600 space-y-1">
+                  <div>
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      D
+                    </kbd>{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      H
+                    </kbd>{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      E
+                    </kbd>{" "}
+                    → tools
+                  </div>
+                  <div>
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      1
+                    </kbd>{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      2
+                    </kbd>{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      3
+                    </kbd>{" "}
+                    → line types
+                  </div>
+                  <div>
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      Space
+                    </kbd>{" "}
+                    → play/pause
+                  </div>
+                  <div>
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      ⌘Z
+                    </kbd>{" "}
+                    → undo
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import type { UseAuthReturn } from "@/hooks/use-auth";
 import { Avatar } from "./avatar";
 import { CharacterSelector } from "./character-selector";
 import type { CharacterType } from "@/lib/linerider/characters";
 import { useLineriderStore } from "@/stores/linerider-store";
+import { X } from "lucide-react";
 
 interface ProfileModalProps {
   auth: UseAuthReturn;
@@ -20,7 +22,8 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
     auth.profile?.character || "ball"
   );
   const [saved, setSaved] = useState(false);
-  
+  const modalRef = useRef<HTMLDivElement>(null);
+
   // Get the store's setCharacter to update game in real-time
   const setStoreCharacter = useLineriderStore((s) => s.setCharacter);
 
@@ -30,6 +33,15 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
       setCharacter(auth.profile.character);
     }
   }, [auth.profile?.character]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   // Handler to update both local state AND the game store immediately
   const handleCharacterSelect = (newCharacter: CharacterType) => {
@@ -44,28 +56,30 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+  // Handle backdrop click
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      onClose();
+    }
+  };
+
+  // Use portal to render at document body level
+  return createPortal(
+    <div
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={handleBackdropClick}
+    >
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl"
+      >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+          className="absolute right-4 top-4 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           aria-label="Close"
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <X className="h-5 w-5" />
         </button>
 
         <h2 className="mb-6 text-2xl font-bold text-gray-900">Your Profile</h2>
@@ -147,6 +161,7 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

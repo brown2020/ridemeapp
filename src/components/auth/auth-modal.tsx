@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import type { UseAuthReturn } from "@/hooks/use-auth";
+import { X } from "lucide-react";
 
 type AuthMode = "signin" | "signup" | "email-link";
 
@@ -16,6 +18,16 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
   const [password, setPassword] = useState("");
   const [emailLinkSent, setEmailLinkSent] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -51,34 +63,35 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
     setEmail("");
   };
 
+  // Handle backdrop click
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      onClose();
+    }
+  };
+
   // Close modal if sign-in was successful
   if (auth.user && !auth.isLoading) {
     onClose();
     return null;
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={handleBackdropClick}
+    >
+      <div
+        ref={modalRef}
+        className="relative w-full max-w-md rounded-xl bg-white p-6 shadow-2xl"
+      >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+          className="absolute right-4 top-4 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           aria-label="Close"
         >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+          <X className="h-5 w-5" />
         </button>
 
         {/* Email Link Sent - Waiting State */}
@@ -105,12 +118,8 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
               Check your email
             </h2>
 
-            <p className="mb-2 text-gray-600">
-              We sent a sign-in link to:
-            </p>
-            <p className="mb-6 font-medium text-gray-900">
-              {sentToEmail}
-            </p>
+            <p className="mb-2 text-gray-600">We sent a sign-in link to:</p>
+            <p className="mb-6 font-medium text-gray-900">{sentToEmail}</p>
 
             <div className="mb-6 rounded-lg bg-amber-50 p-4 text-left text-sm text-amber-800">
               <p className="mb-2 font-medium">Don&apos;t see it?</p>
@@ -367,6 +376,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
