@@ -77,9 +77,9 @@ function IconBtn({
   } else if (variant === "danger") {
     classes += "text-slate-500 hover:text-red-600 hover:bg-red-50";
   } else if (active) {
-    classes += "bg-slate-100 text-slate-900 shadow-inner";
+    classes += "bg-slate-200 text-slate-900 ring-1 ring-slate-300";
   } else {
-    classes += "text-slate-600 hover:text-slate-900 hover:bg-slate-50";
+    classes += "text-slate-500 hover:text-slate-700 hover:bg-slate-100";
   }
 
   return (
@@ -115,6 +115,7 @@ export function LineriderControls() {
     resetCamera,
     zoomIn,
     zoomOut,
+    zoom,
   } = useLineriderStore(
     useShallow((s) => ({
       tool: s.tool,
@@ -132,8 +133,13 @@ export function LineriderControls() {
       resetCamera: s.resetCamera,
       zoomIn: s.zoomIn,
       zoomOut: s.zoomOut,
+      zoom: s.camera.zoom,
     }))
   );
+
+  // Zoom limits (must match store)
+  const MIN_ZOOM = 0.2;
+  const MAX_ZOOM = 5;
 
   return (
     <div className="pointer-events-none absolute inset-0 select-none">
@@ -279,10 +285,18 @@ export function LineriderControls() {
 
         {/* View Controls */}
         <div className="flex items-center gap-0.5">
-          <IconBtn onClick={zoomOut} tooltip="Zoom out (-)">
+          <IconBtn
+            onClick={zoomOut}
+            tooltip="Zoom out (-)"
+            disabled={zoom <= MIN_ZOOM}
+          >
             <ZoomOut className="w-4 h-4" />
           </IconBtn>
-          <IconBtn onClick={zoomIn} tooltip="Zoom in (+)">
+          <IconBtn
+            onClick={zoomIn}
+            tooltip="Zoom in (+)"
+            disabled={zoom >= MAX_ZOOM}
+          >
             <ZoomIn className="w-4 h-4" />
           </IconBtn>
           <IconBtn
