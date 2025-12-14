@@ -28,7 +28,7 @@ interface AuthActions {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
-  sendEmailLink: (email: string) => Promise<void>;
+  sendEmailLink: (email: string) => Promise<boolean>;
   signOut: () => Promise<void>;
   updateProfile: (displayName: string) => Promise<void>;
   clearError: () => void;
@@ -179,11 +179,12 @@ export function useAuth(): UseAuthReturn {
     []
   );
 
-  const handleSendEmailLink = useCallback(async (email: string) => {
+  const handleSendEmailLink = useCallback(async (email: string): Promise<boolean> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
     try {
       await sendEmailLink(email);
       setState((prev) => ({ ...prev, isLoading: false }));
+      return true;
     } catch (error) {
       setState((prev) => ({
         ...prev,
@@ -193,6 +194,7 @@ export function useAuth(): UseAuthReturn {
             ? error
             : new Error("Failed to send email link"),
       }));
+      return false;
     }
   }, []);
 

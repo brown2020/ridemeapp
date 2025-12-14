@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // USERS COLLECTION
+    // ============================================
+    // Each user can only read/write their own document
+    // Path: /users/{uid}
+    
+    match /users/{uid} {
+      // Allow read/write only if the request is from the authenticated user
+      // who owns this document
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+      
+      // ----------------------------------------
+      // TRACKS SUBCOLLECTION
+      // ----------------------------------------
+      // User's saved tracks: /users/{uid}/tracks/{trackId}
+      match /tracks/{trackId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+      
+      // ----------------------------------------
+      // SETTINGS SUBCOLLECTION
+      // ----------------------------------------
+      // User preferences: /users/{uid}/settings/{settingId}
+      match /settings/{settingId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+      
+      // ----------------------------------------
+      // ANY OTHER SUBCOLLECTIONS
+      // ----------------------------------------
+      // Catch-all for any future subcollections under the user document
+      match /{subcollection}/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+    
+    // ============================================
+    // DENY ALL OTHER ACCESS
+    // ============================================
+    // Any path not explicitly matched above is denied by default
+    // This is the default Firestore behavior, but making it explicit
+    
+  }
+}
+

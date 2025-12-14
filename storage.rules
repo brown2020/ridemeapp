@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ============================================
+    // USER FILES
+    // ============================================
+    // All user files must be under /users/{uid}/
+    // Only the authenticated owner can read/write
+    
+    match /users/{uid}/{allPaths=**} {
+      // Allow read/write only if the request is from the authenticated user
+      // who owns this folder
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+    
+    // ============================================
+    // OPTIONAL: FILE SIZE & TYPE RESTRICTIONS
+    // ============================================
+    // Uncomment and modify these rules if you want to add restrictions
+    
+    // Example: Limit uploads to 5MB and only allow images
+    // match /users/{uid}/avatars/{fileName} {
+    //   allow read: if request.auth != null && request.auth.uid == uid;
+    //   allow write: if request.auth != null 
+    //                && request.auth.uid == uid
+    //                && request.resource.size < 5 * 1024 * 1024  // 5MB limit
+    //                && request.resource.contentType.matches('image/.*');
+    // }
+    
+    // Example: Limit track thumbnails to 2MB
+    // match /users/{uid}/tracks/{trackId}/thumbnail {
+    //   allow read: if request.auth != null && request.auth.uid == uid;
+    //   allow write: if request.auth != null 
+    //                && request.auth.uid == uid
+    //                && request.resource.size < 2 * 1024 * 1024;  // 2MB limit
+    // }
+    
+    // ============================================
+    // DENY ALL OTHER ACCESS
+    // ============================================
+    // Any path not under /users/{uid}/ is denied by default
+    // This prevents unauthorized access to any other storage paths
+    
+  }
+}
+
