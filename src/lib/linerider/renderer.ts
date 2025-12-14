@@ -22,26 +22,35 @@ export const RIDER_COLORS = {
 } as const;
 
 /**
- * Calculate adaptive grid spacing based on zoom level
+ * Calculate grid spacing levels based on zoom
+ * Returns [minorSpacing, majorSpacing] in world units
  */
-export function getGridSpacing(zoom: number): number {
-  const desiredPx = 100;
-  const raw = desiredPx / Math.max(1e-6, zoom);
+export function getGridSpacings(zoom: number): [number, number] {
+  // Base spacing that gives roughly 50px between minor lines
+  const desiredMinorPx = 50;
+  const raw = desiredMinorPx / Math.max(1e-6, zoom);
+
+  // Snap to nice round numbers (powers of 10 * 1, 2, or 5)
   const pow10 = Math.pow(10, Math.floor(Math.log10(raw)));
   const n = raw / pow10;
-  const step = n < 2 ? 1 : n < 5 ? 2 : n < 10 ? 5 : 10;
-  return step * pow10;
+  const minorStep = n < 2 ? 1 : n < 5 ? 2 : 5;
+  const minorSpacing = minorStep * pow10;
+
+  // Major lines every 5 or 10 minor lines
+  const majorSpacing = minorSpacing * (minorStep === 2 ? 5 : 10);
+
+  return [minorSpacing, majorSpacing];
 }
 
 /**
- * Draw the background grid
+ * Draw the background grid with major and minor lines
  */
 export function drawGrid(
   ctx: CanvasRenderingContext2D,
   camera: Camera,
   viewport: Viewport
 ): void {
-  const spacingWorld = getGridSpacing(camera.zoom);
+  const [minorSpacing, majorSpacing] = getGridSpacings(camera.zoom);
   const topLeft = screenToWorld(v(0, 0), camera, viewport);
   const bottomRight = screenToWorld(
     v(viewport.width, viewport.height),
@@ -49,32 +58,54 @@ export function drawGrid(
     viewport
   );
 
-  const startX = Math.floor(topLeft.x / spacingWorld) * spacingWorld;
-  const endX = Math.ceil(bottomRight.x / spacingWorld) * spacingWorld;
-  const startY = Math.floor(topLeft.y / spacingWorld) * spacingWorld;
-  const endY = Math.ceil(bottomRight.y / spacingWorld) * spacingWorld;
+  // Calculate bounds with some padding
+  const startX = Math.floor(topLeft.x / minorSpacing) * minorSpacing;
+  const endX = Math.ceil(bottomRight.x / minorSpacing) * minorSpacing;
+  const startY = Math.floor(topLeft.y / minorSpacing) * minorSpacing;
+  const endY = Math.ceil(bottomRight.y / minorSpacing) * minorSpacing;
 
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.08)";
+  // Draw minor grid lines (lighter)
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.04)";
   ctx.lineWidth = 1 / camera.zoom;
 
-  // Draw vertical lines
   ctx.beginPath();
-  for (let x = startX; x <= endX; x += spacingWorld) {
+  for (let x = startX; x <= endX; x += minorSpacing) {
+    // Skip if this is a major line (we'll draw those separately)
+    if (Math.abs(x % majorSpacing) < 0.001) continue;
     ctx.moveTo(x, startY);
     ctx.lineTo(x, endY);
   }
-  ctx.stroke();
-
-  // Draw horizontal lines
-  ctx.beginPath();
-  for (let y = startY; y <= endY; y += spacingWorld) {
+  for (let y = startY; y <= endY; y += minorSpacing) {
+    if (Math.abs(y % majorSpacing) < 0.001) continue;
     ctx.moveTo(startX, y);
     ctx.lineTo(endX, y);
   }
   ctx.stroke();
 
-  // Draw axes (stronger)
-  ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+  // Draw major grid lines (darker)
+  const majorStartX = Math.floor(topLeft.x / majorSpacing) * majorSpacing;
+  const majorEndX = Math.ceil(bottomRight.x / majorSpacing) * majorSpacing;
+  const majorStartY = Math.floor(topLeft.y / majorSpacing) * majorSpacing;
+  const majorEndY = Math.ceil(bottomRight.y / majorSpacing) * majorSpacing;
+
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.12)";
+  ctx.lineWidth = 1 / camera.zoom;
+
+  ctx.beginPath();
+  for (let x = majorStartX; x <= majorEndX; x += majorSpacing) {
+    if (Math.abs(x) < 0.001) continue; // Skip axis, drawn separately
+    ctx.moveTo(x, startY);
+    ctx.lineTo(x, endY);
+  }
+  for (let y = majorStartY; y <= majorEndY; y += majorSpacing) {
+    if (Math.abs(y) < 0.001) continue;
+    ctx.moveTo(startX, y);
+    ctx.lineTo(endX, y);
+  }
+  ctx.stroke();
+
+  // Draw axes (strongest)
+  ctx.strokeStyle = "rgba(0, 0, 0, 0.25)";
   ctx.lineWidth = 1.5 / camera.zoom;
 
   ctx.beginPath();
@@ -86,6 +117,67 @@ export function drawGrid(
   ctx.moveTo(startX, 0);
   ctx.lineTo(endX, 0);
   ctx.stroke();
+
+  // Draw scale indicator in bottom-left corner
+  drawScaleIndicator(ctx, camera, viewport, majorSpacing);
+}
+
+/**
+ * Draw a scale indicator showing the current grid spacing
+ */
+function drawScaleIndicator(
+  ctx: CanvasRenderingContext2D,
+  camera: Camera,
+  viewport: Viewport,
+  majorSpacing: number
+): void {
+  // Draw in screen space, not world space
+  ctx.save();
+  ctx.resetTransform();
+
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  ctx.scale(dpr, dpr);
+
+  const padding = 16;
+  const barLength = majorSpacing * camera.zoom; // Length in screen pixels
+  const barHeight = 4;
+  const y = viewport.height - padding - 20;
+  const x = padding;
+
+  // Background
+  ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+  ctx.fillRect(x - 4, y - 16, barLength + 8, 32);
+
+  // Scale bar
+  ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+  ctx.fillRect(x, y, barLength, barHeight);
+
+  // End caps
+  ctx.fillRect(x, y - 4, 2, barHeight + 8);
+  ctx.fillRect(x + barLength - 2, y - 4, 2, barHeight + 8);
+
+  // Label
+  const label = formatSpacing(majorSpacing);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+  ctx.font = "11px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillText(label, x + barLength / 2, y - 4);
+
+  ctx.restore();
+}
+
+/**
+ * Format spacing value for display
+ */
+function formatSpacing(spacing: number): string {
+  if (spacing >= 1000) {
+    return `${(spacing / 1000).toFixed(spacing >= 10000 ? 0 : 1)}k`;
+  }
+  if (spacing >= 1) {
+    return `${spacing.toFixed(0)}`;
+  }
+  return spacing.toFixed(1);
 }
 
 /**

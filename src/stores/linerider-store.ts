@@ -79,9 +79,15 @@ type LineriderActions = Readonly<{
   toggleCameraFollowing: () => void;
   setPlaybackSpeed: (speed: number) => void;
   setCharacter: (character: CharacterType) => void;
-  
+
   /** Reset camera to default position and zoom */
   resetCamera: () => void;
+
+  /** Zoom in by a fixed factor */
+  zoomIn: () => void;
+
+  /** Zoom out by a fixed factor */
+  zoomOut: () => void;
 
   /** Rebuild spatial hash cache */
   rebuildSpatialHash: () => void;
@@ -220,7 +226,8 @@ export const useLineriderStore = create<LineriderStore>()(
 
     zoomAt: (cursorScreen, viewport, zoomFactor) =>
       set((s) => {
-        const nextZoom = clamp(s.camera.zoom * zoomFactor, 0.05, 20);
+        // Zoom limits: 0.2 (zoomed out) to 5 (zoomed in)
+        const nextZoom = clamp(s.camera.zoom * zoomFactor, 0.2, 5);
         const centerScreen = { x: viewport.width / 2, y: viewport.height / 2 };
         const worldAtCursor = {
           x: (cursorScreen.x - centerScreen.x) / s.camera.zoom + s.camera.pos.x,
@@ -308,17 +315,39 @@ export const useLineriderStore = create<LineriderStore>()(
         const cam = s.camera.pos;
         const dx = center.x - cam.x;
         const dy = center.y - cam.y;
-        if (dx * dx + dy * dy > 1) {
-          // Smooth camera follow
-          set((state) => ({
-            camera: {
-              ...state.camera,
-              pos: {
-                x: state.camera.pos.x + dx * 0.1,
-                y: state.camera.pos.y + dy * 0.1,
+        const distSq = dx * dx + dy * dy;
+
+        if (distSq > 1) {
+          // Use adaptive smoothing - faster when further away
+          // Snap immediately if very far (> 500 units), otherwise smooth follow
+          const dist = Math.sqrt(distSq);
+          const snapThreshold = 500;
+
+          if (dist > snapThreshold) {
+            // Snap directly to rider
+            set((state) => ({
+              camera: {
+                ...state.camera,
+                pos: { x: center.x, y: center.y },
               },
-            },
-          }));
+            }));
+          } else {
+            // Adaptive smoothing: faster follow when further away
+            // Range from 0.15 (close) to 0.5 (far)
+            const smoothing = Math.min(
+              0.5,
+              0.15 + (dist / snapThreshold) * 0.35
+            );
+            set((state) => ({
+              camera: {
+                ...state.camera,
+                pos: {
+                  x: state.camera.pos.x + dx * smoothing,
+                  y: state.camera.pos.y + dy * smoothing,
+                },
+              },
+            }));
+          }
         }
       }
     },
@@ -353,6 +382,22 @@ export const useLineriderStore = create<LineriderStore>()(
         rider: createSimpleRider(s.riderStart),
         elapsedTime: 0,
         isPlaying: false,
+      })),
+
+    zoomIn: () =>
+      set((s) => ({
+        camera: {
+          ...s.camera,
+          zoom: clamp(s.camera.zoom * 1.25, 0.2, 5),
+        },
+      })),
+
+    zoomOut: () =>
+      set((s) => ({
+        camera: {
+          ...s.camera,
+          zoom: clamp(s.camera.zoom / 1.25, 0.2, 5),
+        },
       })),
 
     rebuildSpatialHash: () => {

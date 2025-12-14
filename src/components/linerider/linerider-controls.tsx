@@ -22,6 +22,8 @@ import {
   Zap,
   Minus,
   Sparkles,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
 
 // Icon button component
@@ -78,6 +80,8 @@ export function LineriderControls() {
     toggleCameraFollowing,
     setPlaybackSpeed,
     resetCamera,
+    zoomIn,
+    zoomOut,
   } = useLineriderStore(
     useShallow((s) => ({
       tool: s.tool,
@@ -93,6 +97,8 @@ export function LineriderControls() {
       toggleCameraFollowing: s.toggleCameraFollowing,
       setPlaybackSpeed: s.setPlaybackSpeed,
       resetCamera: s.resetCamera,
+      zoomIn: s.zoomIn,
+      zoomOut: s.zoomOut,
     }))
   );
 
@@ -203,6 +209,12 @@ export function LineriderControls() {
 
         {/* View Controls */}
         <div className="flex items-center gap-0.5">
+          <IconBtn onClick={zoomOut} tooltip="Zoom out (-)">
+            <ZoomOut className="w-4 h-4" />
+          </IconBtn>
+          <IconBtn onClick={zoomIn} tooltip="Zoom in (+)">
+            <ZoomIn className="w-4 h-4" />
+          </IconBtn>
           <IconBtn
             active={settings.isGridVisible}
             onClick={toggleGrid}
@@ -291,6 +303,15 @@ export function LineriderControls() {
                   <div>Scroll → zoom</div>
                   <div>Right drag → pan</div>
                   <div>Shift+click → set start</div>
+                  <div>
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      +
+                    </kbd>{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      -
+                    </kbd>{" "}
+                    → zoom
+                  </div>
                 </div>
               </div>
 

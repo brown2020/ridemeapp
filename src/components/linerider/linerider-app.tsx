@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 export function LineriderApp() {
   const auth = useAuth();
-  
+
   const {
     setTool,
     setLineType,
@@ -20,6 +20,8 @@ export function LineriderApp() {
     toggleCameraFollowing,
     setCharacter,
     resetCamera,
+    zoomIn,
+    zoomOut,
   } = useLineriderStore(
     useShallow((s) => ({
       setTool: s.setTool,
@@ -31,6 +33,8 @@ export function LineriderApp() {
       toggleCameraFollowing: s.toggleCameraFollowing,
       setCharacter: s.setCharacter,
       resetCamera: s.resetCamera,
+      zoomIn: s.zoomIn,
+      zoomOut: s.zoomOut,
     }))
   );
 
@@ -91,6 +95,16 @@ export function LineriderApp() {
         setLineType("scenery");
       }
 
+      // Zoom
+      if (key === "=" || key === "+") {
+        e.preventDefault();
+        zoomIn();
+      }
+      if (key === "-" || key === "_") {
+        e.preventDefault();
+        zoomOut();
+      }
+
       // Other actions
       if (key === "r" || key === "home" || key === "0") resetCamera();
       if (key === "c") clearTrack();
@@ -109,6 +123,8 @@ export function LineriderApp() {
     toggleGrid,
     togglePlaying,
     undo,
+    zoomIn,
+    zoomOut,
   ]);
 
   return (
