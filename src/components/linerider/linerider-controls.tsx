@@ -91,9 +91,9 @@ function IconBtn({
   );
 }
 
-// Separator component
+// Separator component - hidden on small screens when toolbar wraps
 function Separator() {
-  return <div className="w-px h-6 bg-slate-200 mx-1" />;
+  return <div className="hidden sm:block w-px h-6 bg-slate-200 mx-1" />;
 }
 
 export function LineriderControls() {
@@ -144,14 +144,17 @@ export function LineriderControls() {
   return (
     <div className="pointer-events-none absolute inset-0 select-none">
       {/* Toolbar */}
-      <div className="pointer-events-auto absolute left-3 right-3 top-3 flex items-center gap-1 rounded-xl border border-slate-200/80 bg-white/95 backdrop-blur-sm px-2 py-1.5 shadow-lg shadow-slate-200/50">
+      <div className="pointer-events-auto absolute left-2 right-2 top-2 sm:left-3 sm:right-3 sm:top-3 flex flex-wrap items-center gap-1 sm:gap-1 rounded-xl border border-slate-200/80 bg-white/95 backdrop-blur-sm px-1.5 py-1 sm:px-2 sm:py-1.5 shadow-lg shadow-slate-200/50">
         {/* Logo & Help */}
         <IconBtn onClick={() => setShowHelp(!showHelp)} tooltip="Help">
-          <span className="font-semibold text-slate-800">Ride.me</span>
+          <HelpCircle className="w-4 h-4 sm:hidden" />
+          <span className="hidden sm:inline font-semibold text-slate-800">
+            Ride.me
+          </span>
           {showHelp ? (
-            <ChevronUp className="w-4 h-4 text-slate-400" />
+            <ChevronUp className="w-4 h-4 text-slate-400 hidden sm:block" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400" />
+            <ChevronDown className="w-4 h-4 text-slate-400 hidden sm:block" />
           )}
         </IconBtn>
 
@@ -212,8 +215,8 @@ export function LineriderControls() {
           </>
         )}
 
-        {/* Spacer */}
-        <div className="flex-1" />
+        {/* Spacer - pushes right side controls on larger screens */}
+        <div className="hidden sm:block flex-1" />
 
         {/* Playback Controls */}
         <div className="flex items-center gap-1">
