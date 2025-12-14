@@ -18,21 +18,11 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
   const [displayName, setDisplayName] = useState(
     auth.profile?.displayName || ""
   );
-  const [character, setCharacter] = useState<CharacterType>(
-    auth.profile?.character || "ball"
-  );
   const [saved, setSaved] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Get the store's setCharacter to update game in real-time
+  const character = useLineriderStore((s) => s.character);
   const setStoreCharacter = useLineriderStore((s) => s.setCharacter);
-
-  // Sync character from profile when it changes (e.g., on initial load)
-  useEffect(() => {
-    if (auth.profile?.character) {
-      setCharacter(auth.profile.character);
-    }
-  }, [auth.profile?.character]);
 
   // Close on Escape key
   useEffect(() => {
@@ -45,7 +35,6 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
 
   // Handler to update both local state AND the game store immediately
   const handleCharacterSelect = (newCharacter: CharacterType) => {
-    setCharacter(newCharacter);
     setStoreCharacter(newCharacter); // Update game immediately
   };
 

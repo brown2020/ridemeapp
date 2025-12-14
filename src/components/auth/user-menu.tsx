@@ -6,18 +6,8 @@ import { AuthModal } from "./auth-modal";
 import { ProfileModal } from "./profile-modal";
 import { Avatar } from "./avatar";
 
-export function UserMenu() {
-  const auth = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
-
-  // Don't show anything if Firebase is not configured
-  if (!auth.isConfigured) {
-    return null;
-  }
-
-  // Loading spinner (only shown when NOT in a modal flow)
-  const LoadingSpinner = () => (
+function LoadingSpinner() {
+  return (
     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100">
       <svg className="h-4 w-4 animate-spin text-gray-400" viewBox="0 0 24 24">
         <circle
@@ -37,6 +27,17 @@ export function UserMenu() {
       </svg>
     </div>
   );
+}
+
+export function UserMenu() {
+  const auth = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  // Don't show anything if Firebase is not configured
+  if (!auth.isConfigured) {
+    return null;
+  }
 
   // Signed out state (or loading while modal is open)
   if (!auth.user) {

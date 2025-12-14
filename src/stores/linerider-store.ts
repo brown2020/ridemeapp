@@ -99,6 +99,17 @@ function makeId(): string {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function commitTrackChange(
+  s: Pick<LineriderState, "history" | "segments" | "trackVersion">,
+  nextSegments: Segment[]
+) {
+  return {
+    history: [...s.history, s.segments],
+    segments: nextSegments,
+    trackVersion: s.trackVersion + 1,
+  };
+}
+
 const DEFAULT_CAMERA: Camera = { pos: { x: 0, y: -50 }, zoom: 1.5 };
 const DEFAULT_RIDER_START: Vec2 = { x: 0, y: -100 };
 const DEFAULT_SETTINGS: LineriderSettings = {
@@ -150,19 +161,16 @@ export const useLineriderStore = create<LineriderStore>()(
     clearTrack: () =>
       set((s) => {
         if (s.segments.length === 0) return s;
-        return {
-          history: [...s.history, s.segments],
-          segments: [],
-          trackVersion: s.trackVersion + 1,
-        };
+        return commitTrackChange(s, []);
       }),
 
     addSegment: (a, b) =>
-      set((s) => ({
-        history: [...s.history, s.segments],
-        segments: [...s.segments, { id: makeId(), a, b, type: s.lineType }],
-        trackVersion: s.trackVersion + 1,
-      })),
+      set((s) =>
+        commitTrackChange(s, [
+          ...s.segments,
+          { id: makeId(), a, b, type: s.lineType },
+        ])
+      ),
 
     eraseAt: (p, radiusWorld) =>
       set((s) => {
@@ -170,28 +178,20 @@ export const useLineriderStore = create<LineriderStore>()(
           (seg) => distPointToSegment(p, seg.a, seg.b) > radiusWorld
         );
         if (nextSegments.length === s.segments.length) return s;
-        return {
-          history: [...s.history, s.segments],
-          segments: nextSegments,
-          trackVersion: s.trackVersion + 1,
-        };
+        return commitTrackChange(s, nextSegments);
       }),
 
     addSegments: (segments) =>
       set((s) => {
         if (segments.length === 0) return s;
-        return {
-          history: [...s.history, s.segments],
-          segments: [
-            ...s.segments,
-            ...segments.map((seg) => ({
-              id: makeId(),
-              ...seg,
-              type: s.lineType,
-            })),
-          ],
-          trackVersion: s.trackVersion + 1,
-        };
+        return commitTrackChange(s, [
+          ...s.segments,
+          ...segments.map((seg) => ({
+            id: makeId(),
+            ...seg,
+            type: s.lineType,
+          })),
+        ]);
       }),
 
     erasePath: (points, radiusWorld) =>
@@ -206,11 +206,7 @@ export const useLineriderStore = create<LineriderStore>()(
         };
         const nextSegments = s.segments.filter(keep);
         if (nextSegments.length === s.segments.length) return s;
-        return {
-          history: [...s.history, s.segments],
-          segments: nextSegments,
-          trackVersion: s.trackVersion + 1,
-        };
+        return commitTrackChange(s, nextSegments);
       }),
 
     panByScreenDelta: (deltaScreen) =>
