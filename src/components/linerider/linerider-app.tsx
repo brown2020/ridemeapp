@@ -20,6 +20,7 @@ export function LineriderApp() {
     toggleGrid,
     toggleCameraFollowing,
     setCharacter,
+    resetCamera,
   } = useLineriderStore(
     useShallow((s) => ({
       setTool: s.setTool,
@@ -31,6 +32,7 @@ export function LineriderApp() {
       toggleGrid: s.toggleGrid,
       toggleCameraFollowing: s.toggleCameraFollowing,
       setCharacter: s.setCharacter,
+      resetCamera: s.resetCamera,
     }))
   );
 
@@ -96,12 +98,14 @@ export function LineriderApp() {
       if (key === "c") clearTrack();
       if (key === "g") toggleGrid();
       if (key === "f") toggleCameraFollowing();
+      if (key === "home" || key === "0") resetCamera();
     }
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [
     clearTrack,
+    resetCamera,
     resetRider,
     setTool,
     setLineType,

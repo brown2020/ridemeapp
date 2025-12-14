@@ -79,6 +79,9 @@ type LineriderActions = Readonly<{
   toggleCameraFollowing: () => void;
   setPlaybackSpeed: (speed: number) => void;
   setCharacter: (character: CharacterType) => void;
+  
+  /** Reset camera to default position and zoom */
+  resetCamera: () => void;
 
   /** Rebuild spatial hash cache */
   rebuildSpatialHash: () => void;
@@ -343,6 +346,8 @@ export const useLineriderStore = create<LineriderStore>()(
       set((s) => ({ settings: { ...s.settings, playbackSpeed: speed } })),
 
     setCharacter: (character) => set({ character }),
+
+    resetCamera: () => set({ camera: DEFAULT_CAMERA }),
 
     rebuildSpatialHash: () => {
       const s = get();

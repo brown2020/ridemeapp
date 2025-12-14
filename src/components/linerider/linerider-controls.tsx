@@ -80,6 +80,7 @@ export function LineriderControls() {
     toggleGrid,
     toggleCameraFollowing,
     setPlaybackSpeed,
+    resetCamera,
   } = useLineriderStore(
     useShallow((s) => ({
       tool: s.tool,
@@ -95,6 +96,7 @@ export function LineriderControls() {
       toggleGrid: s.toggleGrid,
       toggleCameraFollowing: s.toggleCameraFollowing,
       setPlaybackSpeed: s.setPlaybackSpeed,
+      resetCamera: s.resetCamera,
     }))
   );
 
@@ -158,6 +160,12 @@ export function LineriderControls() {
             title="Follow rider (F)"
           >
             Follow
+          </Button>
+          <Button
+            onClick={resetCamera}
+            title="Reset view to start (Home)"
+          >
+            🏠 Home
           </Button>
         </div>
 
@@ -230,6 +238,7 @@ export function LineriderControls() {
             <div>🖱️ Wheel: zoom · Middle/Right drag: pan</div>
             <div>⇧ Shift+Click: set rider start position</div>
             <div>⌨️ D/H/E: tools · 1/2/3: line types · Space: play</div>
+            <div>🏠 Home/0: reset view · R: reset rider · C: clear</div>
           </div>
         </div>
       </div>
