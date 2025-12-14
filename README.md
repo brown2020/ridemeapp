@@ -73,8 +73,9 @@ Just like the classic Line Rider:
 
 - **Google Sign-In** — One-click authentication
 - **Email/Password** — Traditional account creation
-- **Email Link** — Passwordless magic link sign-in
+- **Email Link** — Passwordless magic link sign-in with confirmation UI
 - **User Profiles** — Customizable display names
+- **Secure by Default** — User data isolated with Firebase security rules
 
 ---
 
@@ -144,6 +145,45 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`    | Optional | Firebase storage bucket URL      |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Optional | Firebase Cloud Messaging sender ID |
 | `NEXT_PUBLIC_FIREBASE_APP_ID`            | Optional | Firebase app identifier          |
+
+### Firebase Security Rules
+
+The repository includes pre-configured security rules for Firestore and Storage. These rules ensure **user data isolation** — each user can only access their own data.
+
+#### Deploying Security Rules
+
+1. Go to [Firebase Console](https://console.firebase.google.com/) and select your project
+
+2. **For Firestore Database:**
+   - Navigate to **Firestore Database → Rules**
+   - Copy the contents of `firestore.rules` and paste into the editor
+   - Click **Publish**
+
+3. **For Storage:**
+   - Navigate to **Storage → Rules**
+   - Copy the contents of `storage.rules` and paste into the editor
+   - Click **Publish**
+
+#### Data Structure
+
+```
+Firestore:
+/users/{uid}                    ← User profile document
+/users/{uid}/tracks/{trackId}   ← Saved tracks (future)
+/users/{uid}/settings/{docId}   ← User preferences (future)
+
+Storage:
+/users/{uid}/**                 ← User files (avatars, thumbnails, etc.)
+```
+
+#### Security Features
+
+| Feature | Description |
+|---------|-------------|
+| **User isolation** | Users can only read/write under `/users/{their-uid}/` |
+| **Auth required** | All operations require authentication |
+| **UID matching** | `request.auth.uid == uid` ensures ownership |
+| **Default deny** | Any path not explicitly matched is blocked |
 
 ---
 
@@ -227,6 +267,8 @@ ridemeapp/
 │
 ├── public/                         # Static assets
 ├── env.example                     # Environment template
+├── firestore.rules                 # Firestore security rules
+├── storage.rules                   # Firebase Storage security rules
 ├── next.config.mjs                 # Next.js configuration
 ├── postcss.config.mjs              # PostCSS configuration
 ├── eslint.config.mjs               # ESLint flat config
