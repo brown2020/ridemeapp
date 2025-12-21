@@ -10,7 +10,7 @@ A free, open-source **Line Rider** clone built with modern web technologies. Dra
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1.18-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
 [![Zustand](https://img.shields.io/badge/Zustand-5.0.9-443E38?logo=npm)](https://zustand-demo.pmnd.rs/)
 [![Firebase](https://img.shields.io/badge/Firebase-12.6.0-FFCA28?logo=firebase)](https://firebase.google.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 <p align="center">
   <img src="https://via.placeholder.com/800x400?text=Ride.me+Demo" alt="Ride.me Demo" width="100%" />
@@ -499,7 +499,7 @@ npm run build
 
 ## 📄 License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** — see [`LICENSE.md`](LICENSE.md) for details.
 
 ---
 
