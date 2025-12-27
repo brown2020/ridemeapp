@@ -47,7 +47,7 @@ function CharacterPreview({
 
     const animate = () => {
       ctx.clearRect(0, 0, size, size);
-      
+
       // Draw background
       ctx.fillStyle = isSelected ? "#dbeafe" : "#f8fafc";
       ctx.beginPath();
@@ -55,8 +55,15 @@ function CharacterPreview({
       ctx.fill();
 
       // Draw character centered
-      drawCharacterPreview(ctx, character, size / 2, size / 2 + 5, 50, frameRef.current);
-      
+      drawCharacterPreview(
+        ctx,
+        character,
+        size / 2,
+        size / 2 + 5,
+        50,
+        frameRef.current
+      );
+
       frameRef.current++;
       animationRef.current = requestAnimationFrame(animate);
     };
@@ -86,7 +93,9 @@ function CharacterPreview({
         className="rounded-md"
         style={{ imageRendering: "pixelated" }}
       />
-      <span className="mt-1 text-xs font-medium text-gray-700">{info.name}</span>
+      <span className="mt-1 text-xs font-medium text-gray-700">
+        {info.name}
+      </span>
       {isSelected && (
         <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white">
           <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -127,4 +136,3 @@ export function CharacterSelector({
     </div>
   );
 }
-
