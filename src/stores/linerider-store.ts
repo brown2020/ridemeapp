@@ -95,7 +95,12 @@ type LineriderActions = Readonly<{
 
 export type LineriderStore = LineriderState & LineriderActions;
 
+const MAX_HISTORY = 200;
+
 function makeId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
@@ -103,8 +108,9 @@ function commitTrackChange(
   s: Pick<LineriderState, "history" | "segments" | "trackVersion">,
   nextSegments: Segment[]
 ) {
+  const nextHistory = [...s.history, s.segments].slice(-MAX_HISTORY);
   return {
-    history: [...s.history, s.segments],
+    history: nextHistory,
     segments: nextSegments,
     trackVersion: s.trackVersion + 1,
   };
@@ -144,7 +150,8 @@ export const useLineriderStore = create<LineriderStore>()(
 
     setLineType: (lineType) => set({ lineType }),
 
-    pushHistory: () => set((s) => ({ history: [...s.history, s.segments] })),
+    pushHistory: () =>
+      set((s) => ({ history: [...s.history, s.segments].slice(-MAX_HISTORY) })),
 
     undo: () =>
       set((s) => {
@@ -152,7 +159,7 @@ export const useLineriderStore = create<LineriderStore>()(
         const nextHistory = s.history.slice(0, -1);
         const previousSegments = s.history[s.history.length - 1] ?? [];
         return {
-          history: nextHistory,
+          history: nextHistory.slice(-MAX_HISTORY),
           segments: previousSegments,
           trackVersion: s.trackVersion + 1,
         };

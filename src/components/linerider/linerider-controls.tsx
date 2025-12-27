@@ -32,30 +32,6 @@ import {
 // Available playback speeds
 const SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
 
-// Tooltip wrapper component
-function Tooltip({
-  children,
-  text,
-}: {
-  children: React.ReactNode;
-  text?: string;
-}) {
-  // No tooltip - just return children directly (no wrapper)
-  if (!text) return <>{children}</>;
-
-  return (
-    <div className="relative group/tooltip">
-      {children}
-      <div className="pointer-events-none absolute left-1/2 top-full z-50 -translate-x-1/2 pt-2 opacity-0 transition-opacity duration-150 group-hover/tooltip:opacity-100">
-        <div className="whitespace-nowrap rounded-md bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-white shadow-lg">
-          {text}
-          <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-800" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // Icon button component
 function IconBtn({
   active,

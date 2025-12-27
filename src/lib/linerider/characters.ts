@@ -2,6 +2,22 @@ import type { Vec2 } from "./math";
 import { v, sub, normalize, add, mul, len } from "./math";
 import type { RiderState } from "./physics";
 
+function mulberry32(seed: number): () => number {
+  let a = seed | 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function rngForFrame(frame: number, salt: number): () => number {
+  // Keep deterministic visuals per-frame; salt differentiates call sites/characters.
+  return mulberry32(((frame * 2654435761) ^ salt) >>> 0);
+}
+
 /**
  * Available character types
  */
@@ -180,6 +196,7 @@ export function drawSnowboarder(
   const colors = CHARACTER_COLORS.snowboarder;
   const speed = len(velocity) * 60;
   const dir = speed > 0.5 ? normalize(velocity) : v(1, 0);
+  const rand = rngForFrame(frame, 0x51d5_0001);
   
   // Determine facing direction
   const facingRight = dir.x >= 0;
@@ -197,11 +214,11 @@ export function drawSnowboarder(
   if (speed > 5) {
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     for (let i = 0; i < 5; i++) {
-      const spray = Math.random() * 10;
+      const spray = rand() * 10;
       const sx = -flip * (10 + spray);
-      const sy = 5 + Math.random() * 5;
+      const sy = 5 + rand() * 5;
       ctx.beginPath();
-      ctx.arc(sx, sy, 1 + Math.random() * 2, 0, Math.PI * 2);
+      ctx.arc(sx, sy, 1 + rand() * 2, 0, Math.PI * 2);
       ctx.fill();
     }
   }
@@ -389,6 +406,7 @@ export function drawHorseRider(
   const colors = CHARACTER_COLORS.horse;
   const speed = len(velocity) * 60;
   const dir = speed > 0.5 ? normalize(velocity) : v(1, 0);
+  const rand = rngForFrame(frame, 0x51d5_0002);
   
   const facingRight = dir.x >= 0;
   const flip = facingRight ? 1 : -1;
@@ -407,10 +425,10 @@ export function drawHorseRider(
   if (speed > 8) {
     ctx.fillStyle = "rgba(139, 69, 19, 0.3)";
     for (let i = 0; i < 3; i++) {
-      const dx = -20 - Math.random() * 15;
-      const dy = 10 + Math.random() * 5;
+      const dx = -20 - rand() * 15;
+      const dy = 10 + rand() * 5;
       ctx.beginPath();
-      ctx.arc(dx, dy, 2 + Math.random() * 3, 0, Math.PI * 2);
+      ctx.arc(dx, dy, 2 + rand() * 3, 0, Math.PI * 2);
       ctx.fill();
     }
   }

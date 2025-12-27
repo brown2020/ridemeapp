@@ -49,6 +49,8 @@ function asError(error: unknown, fallbackMessage: string): Error {
   return new Error(fallbackMessage);
 }
 
+let authUnsubscribe: (() => void) | null = null;
+
 export const useAuthStore = create<AuthStore>()(
   subscribeWithSelector((set, get) => ({
     user: null,
@@ -64,6 +66,10 @@ export const useAuthStore = create<AuthStore>()(
 
       const configured = isFirebaseConfigured();
       if (!configured) {
+        if (authUnsubscribe) {
+          authUnsubscribe();
+          authUnsubscribe = null;
+        }
         set({
           hasInitialized: true,
           isConfigured: false,
@@ -101,7 +107,12 @@ export const useAuthStore = create<AuthStore>()(
       }
 
       // Subscribe once to auth changes
-      const unsubscribe = onAuthChange(async (user) => {
+      if (authUnsubscribe) {
+        authUnsubscribe();
+        authUnsubscribe = null;
+      }
+
+      authUnsubscribe = onAuthChange(async (user) => {
         if (!user) {
           set({
             user: null,
@@ -124,10 +135,6 @@ export const useAuthStore = create<AuthStore>()(
           });
         }
       });
-
-      // Keep unsubscribe around without putting it in state (no need to expose)
-      // This avoids accidental re-subscribes; we never re-init anyway.
-      void unsubscribe;
     },
 
     signInWithGoogle: async () => {

@@ -48,7 +48,8 @@ export function getGridSpacings(zoom: number): [number, number] {
 export function drawGrid(
   ctx: CanvasRenderingContext2D,
   camera: Camera,
-  viewport: Viewport
+  viewport: Viewport,
+  dpr: number
 ): void {
   const [minorSpacing, majorSpacing] = getGridSpacings(camera.zoom);
   const topLeft = screenToWorld(v(0, 0), camera, viewport);
@@ -119,7 +120,7 @@ export function drawGrid(
   ctx.stroke();
 
   // Draw scale indicator in bottom-left corner
-  drawScaleIndicator(ctx, camera, viewport, majorSpacing);
+  drawScaleIndicator(ctx, camera, viewport, majorSpacing, dpr);
 }
 
 /**
@@ -129,13 +130,13 @@ function drawScaleIndicator(
   ctx: CanvasRenderingContext2D,
   camera: Camera,
   viewport: Viewport,
-  majorSpacing: number
+  majorSpacing: number,
+  dpr: number
 ): void {
   // Draw in screen space, not world space
   ctx.save();
   ctx.resetTransform();
 
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
   ctx.scale(dpr, dpr);
 
   const padding = 16;

@@ -32,6 +32,13 @@ export interface UserProfileData {
   character?: CharacterType;
 }
 
+function normalizeUserProfile(profile: UserProfile): UserProfile {
+  return {
+    ...profile,
+    character: profile.character || "ball",
+  };
+}
+
 /**
  * Collection name for user profiles
  */
@@ -49,7 +56,8 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     return null;
   }
 
-  return docSnap.data() as UserProfile;
+  const profile = docSnap.data() as UserProfile;
+  return normalizeUserProfile(profile);
 }
 
 /**
@@ -81,16 +89,14 @@ export async function createOrUpdateUserProfile(
 
     await setDoc(docRef, newProfile);
 
-    return {
-      ...newProfile,
-      createdAt: null,
-      updatedAt: null,
-    } as UserProfile;
+    const created = await getUserProfile(user.uid);
+    if (!created) throw new Error("Failed to load profile after create");
+    return created;
   }
 
   // Get existing data
   const existingData = docSnap.data();
-  
+
   // Update existing profile with any new data from auth
   const updates: Record<string, unknown> = {
     email: user.email,
@@ -107,7 +113,7 @@ export async function createOrUpdateUserProfile(
   if (additionalData?.character) {
     updates.character = additionalData.character;
   }
-  
+
   // Ensure character field exists (for profiles created before this feature)
   if (!existingData.character) {
     updates.character = "ball";
@@ -115,14 +121,9 @@ export async function createOrUpdateUserProfile(
 
   await updateDoc(docRef, updates);
 
-  const updatedSnap = await getDoc(docRef);
-  const profile = updatedSnap.data() as UserProfile;
-  
-  // Ensure character is set in returned profile
-  return {
-    ...profile,
-    character: profile.character || "ball",
-  };
+  const updated = await getUserProfile(user.uid);
+  if (!updated) throw new Error("Failed to load profile after update");
+  return updated;
 }
 
 /**

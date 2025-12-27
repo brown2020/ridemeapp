@@ -171,7 +171,7 @@ export function LineriderCanvas() {
 
       // Draw grid
       if (state.settings.isGridVisible) {
-        drawGrid(ctx, state.camera, viewport);
+        drawGrid(ctx, state.camera, viewport, dpr);
       }
 
       // Draw segments (including current stroke being drawn)

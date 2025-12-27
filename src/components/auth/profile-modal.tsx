@@ -55,7 +55,7 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
   // Use portal to render at document body level
   return createPortal(
     <div
-      className="fixed inset-0 z-100 overflow-y-auto bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] overflow-y-auto bg-black/40 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
       <div className="min-h-full px-4 py-12">

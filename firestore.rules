@@ -10,16 +10,33 @@ service cloud.firestore {
     // Path: /users/{uid}
     
     match /users/{uid} {
-      // Allow read/write only if the request is from the authenticated user
-      // who owns this document
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      function isOwner() {
+        return request.auth != null && request.auth.uid == uid;
+      }
+
+      // Ensure the stored uid matches the document path uid (basic integrity)
+      function hasMatchingUid() {
+        return request.resource.data.uid == uid;
+      }
+
+      // Reads: owner only
+      allow read: if isOwner();
+
+      // Creates: owner only + uid must match
+      allow create: if isOwner() && hasMatchingUid();
+
+      // Updates: owner only + uid must remain correct
+      allow update: if isOwner() && hasMatchingUid() && resource.data.uid == uid;
+
+      // Deletes: owner only
+      allow delete: if isOwner();
       
       // ----------------------------------------
       // TRACKS SUBCOLLECTION
       // ----------------------------------------
       // User's saved tracks: /users/{uid}/tracks/{trackId}
       match /tracks/{trackId} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
+        allow read, write: if isOwner();
       }
       
       // ----------------------------------------
@@ -27,7 +44,7 @@ service cloud.firestore {
       // ----------------------------------------
       // User preferences: /users/{uid}/settings/{settingId}
       match /settings/{settingId} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
+        allow read, write: if isOwner();
       }
       
       // ----------------------------------------
@@ -35,7 +52,7 @@ service cloud.firestore {
       // ----------------------------------------
       // Catch-all for any future subcollections under the user document
       match /{subcollection}/{docId} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
+        allow read, write: if isOwner();
       }
     }
     

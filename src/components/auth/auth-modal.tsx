@@ -20,6 +20,11 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
   const [sentToEmail, setSentToEmail] = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Close modal if sign-in was successful (do not trigger side-effects during render)
+  useEffect(() => {
+    if (auth.user && !auth.isLoading) onClose();
+  }, [auth.user, auth.isLoading, onClose]);
+
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -70,15 +75,9 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
     }
   };
 
-  // Close modal if sign-in was successful
-  if (auth.user && !auth.isLoading) {
-    onClose();
-    return null;
-  }
-
   return createPortal(
     <div
-      className="fixed inset-0 z-100 overflow-y-auto bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] overflow-y-auto bg-black/40 backdrop-blur-sm"
       onClick={handleBackdropClick}
     >
       <div className="min-h-full px-4 py-12">
