@@ -72,9 +72,8 @@ export function getFirebaseDb(): Firestore {
  * Uses window.location.origin so it works on any domain.
  */
 export function getEmailLinkRedirectUrl(): string {
-  if (typeof window !== "undefined") {
-    return window.location.origin;
+  if (typeof window === "undefined") {
+    throw new Error("Redirect URL can only be determined client-side");
   }
-  // Fallback for SSR (though email link is only used client-side)
-  return "http://localhost:3000";
+  return window.location.origin;
 }

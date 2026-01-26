@@ -291,10 +291,13 @@ export const useLineriderStore = create<LineriderStore>()(
         get().rebuildSpatialHash();
       }
 
+      // Cache spatial hash to avoid multiple get() calls
+      const spatialHash = get().spatialHash;
+
       const newRider = stepPhysics(
         s.rider,
         s.segments,
-        get().spatialHash,
+        spatialHash,
         dt * s.settings.playbackSpeed
       );
 
@@ -307,12 +310,8 @@ export const useLineriderStore = create<LineriderStore>()(
         return;
       }
 
-      set({
-        rider: newRider,
-        elapsedTime: s.elapsedTime + dt * s.settings.playbackSpeed,
-      });
-
-      // Update camera if following
+      // Prepare camera update if following
+      let cameraUpdate: { pos: { x: number; y: number } } | null = null;
       if (s.settings.isCameraFollowing) {
         const center = getRiderCenter(newRider);
         const cam = s.camera.pos;
@@ -321,38 +320,36 @@ export const useLineriderStore = create<LineriderStore>()(
         const distSq = dx * dx + dy * dy;
 
         if (distSq > 1) {
-          // Use adaptive smoothing - faster when further away
-          // Snap immediately if very far (> 500 units), otherwise smooth follow
           const dist = Math.sqrt(distSq);
           const snapThreshold = 500;
 
           if (dist > snapThreshold) {
             // Snap directly to rider
-            set((state) => ({
-              camera: {
-                ...state.camera,
-                pos: { x: center.x, y: center.y },
-              },
-            }));
+            cameraUpdate = { pos: { x: center.x, y: center.y } };
           } else {
             // Adaptive smoothing: faster follow when further away
-            // Range from 0.15 (close) to 0.5 (far)
             const smoothing = Math.min(
               0.5,
               0.15 + (dist / snapThreshold) * 0.35
             );
-            set((state) => ({
-              camera: {
-                ...state.camera,
-                pos: {
-                  x: state.camera.pos.x + dx * smoothing,
-                  y: state.camera.pos.y + dy * smoothing,
-                },
+            cameraUpdate = {
+              pos: {
+                x: cam.x + dx * smoothing,
+                y: cam.y + dy * smoothing,
               },
-            }));
+            };
           }
         }
       }
+
+      // Batch all updates into a single set() call to minimize re-renders
+      set({
+        rider: newRider,
+        elapsedTime: s.elapsedTime + dt * s.settings.playbackSpeed,
+        ...(cameraUpdate && {
+          camera: { ...s.camera, ...cameraUpdate },
+        }),
+      });
     },
 
     setGridVisible: (isGridVisible) =>

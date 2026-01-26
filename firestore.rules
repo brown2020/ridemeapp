@@ -19,14 +19,25 @@ service cloud.firestore {
         return request.resource.data.uid == uid;
       }
 
+      // Validate user profile schema
+      function isValidProfile() {
+        let data = request.resource.data;
+        return data.keys().hasAll(['uid', 'email', 'character']) &&
+               data.uid is string &&
+               data.email == null || data.email is string &&
+               (data.displayName == null || (data.displayName is string && data.displayName.size() <= 50)) &&
+               (data.photoURL == null || data.photoURL is string) &&
+               data.character in ['ball', 'snowboarder', 'skateboarder', 'horse'];
+      }
+
       // Reads: owner only
       allow read: if isOwner();
 
-      // Creates: owner only + uid must match
-      allow create: if isOwner() && hasMatchingUid();
+      // Creates: owner only + uid must match + valid schema
+      allow create: if isOwner() && hasMatchingUid() && isValidProfile();
 
-      // Updates: owner only + uid must remain correct
-      allow update: if isOwner() && hasMatchingUid() && resource.data.uid == uid;
+      // Updates: owner only + uid must remain correct + valid schema
+      allow update: if isOwner() && hasMatchingUid() && resource.data.uid == uid && isValidProfile();
 
       // Deletes: owner only
       allow delete: if isOwner();

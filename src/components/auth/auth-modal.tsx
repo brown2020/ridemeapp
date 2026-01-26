@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef, type FormEvent } from "react";
+import { useId, useState, useEffect, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import type { UseAuthReturn } from "@/hooks/use-auth";
 import { X } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useModalA11y } from "@/hooks/use-modal-a11y";
 
 type AuthMode = "signin" | "signup" | "email-link";
 
@@ -13,6 +15,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ auth, onClose }: AuthModalProps) {
+  const titleId = useId();
   const [mode, setMode] = useState<AuthMode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,19 +23,21 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
   const [sentToEmail, setSentToEmail] = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Close modal if sign-in was successful (do not trigger side-effects during render)
+  // Stable reference to onClose to avoid effect churn
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    if (auth.user && !auth.isLoading) onClose();
-  }, [auth.user, auth.isLoading, onClose]);
-
-  // Close on Escape key
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    onCloseRef.current = onClose;
   }, [onClose]);
+
+  // Close modal if sign-in was successful (avoid side-effects during render)
+  useEffect(() => {
+    if (auth.user && !auth.isLoading) {
+      onCloseRef.current();
+    }
+  }, [auth.user, auth.isLoading]);
+
+  // Modal accessibility (Escape key, focus trap, focus restoration)
+  useModalA11y({ containerRef: modalRef, onClose, isOpen: true });
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -57,7 +62,6 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
 
   const handleResendEmail = async () => {
     if (sentToEmail) {
-      // Just resend - we're already in the "email sent" state
       await auth.sendEmailLink(sentToEmail);
     }
   };
@@ -68,26 +72,30 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
     setEmail("");
   };
 
-  // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      onClose();
+    if (e.target === e.currentTarget) {
+      onCloseRef.current();
     }
   };
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] overflow-y-auto bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-modal overflow-y-auto bg-black/40 backdrop-blur-sm"
       onClick={handleBackdropClick}
+      role="presentation"
     >
       <div className="min-h-full px-4 py-12">
         <div
           ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
           className="relative mx-auto w-full max-w-md rounded-xl bg-white p-6 shadow-2xl"
         >
           {/* Close button */}
           <button
-            onClick={onClose}
+            onClick={() => onCloseRef.current()}
             className="absolute right-4 top-4 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             aria-label="Close"
           >
@@ -104,6 +112,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -114,7 +123,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                 </svg>
               </div>
 
-              <h2 className="mb-2 text-2xl font-bold text-gray-900">
+              <h2 id={titleId} className="mb-2 text-2xl font-bold text-gray-900">
                 Check your email
               </h2>
 
@@ -132,7 +141,11 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
 
               {/* Error message */}
               {auth.error && (
-                <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                <div
+                  className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+                  role="alert"
+                  aria-live="polite"
+                >
                   {auth.error.message}
                   <button
                     onClick={auth.clearError}
@@ -151,22 +164,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                 >
                   {auth.isLoading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
+                      <LoadingSpinner className="h-4 w-4" />
                       Sending...
                     </span>
                   ) : (
@@ -197,7 +195,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
             </div>
           ) : (
             <>
-              <h2 className="mb-6 text-2xl font-bold text-gray-900">
+              <h2 id={titleId} className="mb-6 text-2xl font-bold text-gray-900">
                 {mode === "signin" && "Sign In"}
                 {mode === "signup" && "Create Account"}
                 {mode === "email-link" && "Sign In with Email Link"}
@@ -205,7 +203,11 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
 
               {/* Error message */}
               {auth.error && (
-                <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                <div
+                  className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+                  role="alert"
+                  aria-live="polite"
+                >
                   {auth.error.message}
                   <button
                     onClick={auth.clearError}
@@ -222,7 +224,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                 disabled={auth.isLoading}
                 className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
               >
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -297,22 +299,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                 >
                   {auth.isLoading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
+                      <LoadingSpinner className="h-4 w-4" />
                       Loading...
                     </span>
                   ) : mode === "signin" ? (

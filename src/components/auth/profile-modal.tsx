@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, type FormEvent } from "react";
+import { useId, useState, useEffect, useRef, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import type { UseAuthReturn } from "@/hooks/use-auth";
 import { Avatar } from "./avatar";
@@ -8,6 +8,7 @@ import { CharacterSelector } from "./character-selector";
 import type { CharacterType } from "@/lib/linerider/characters";
 import { useLineriderStore } from "@/stores/linerider-store";
 import { X } from "lucide-react";
+import { useModalA11y } from "@/hooks/use-modal-a11y";
 
 interface ProfileModalProps {
   auth: UseAuthReturn;
@@ -15,23 +16,35 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ auth, onClose }: ProfileModalProps) {
+  const titleId = useId();
   const [displayName, setDisplayName] = useState(
     auth.profile?.displayName || ""
   );
   const [saved, setSaved] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const character = useLineriderStore((s) => s.character);
   const setStoreCharacter = useLineriderStore((s) => s.setCharacter);
 
-  // Close on Escape key
+  // Stable reference to onClose to avoid effect churn
+  const onCloseRef = useRef(onClose);
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    onCloseRef.current = onClose;
   }, [onClose]);
+
+  // Modal accessibility (Escape key, focus trap, focus restoration)
+  useModalA11y({ containerRef: modalRef, onClose, isOpen: true });
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Handler to update both local state AND the game store immediately
   const handleCharacterSelect = (newCharacter: CharacterType) => {
@@ -42,43 +55,59 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
     e.preventDefault();
     await auth.updateProfile(displayName, character);
     setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    
+    // Clear any existing timeout before starting a new one
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = setTimeout(() => {
+      setSaved(false);
+      timeoutRef.current = null;
+    }, 2000);
   };
 
-  // Handle backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
-    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      onClose();
+    if (e.target === e.currentTarget) {
+      onCloseRef.current();
     }
   };
 
-  // Use portal to render at document body level
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] overflow-y-auto bg-black/40 backdrop-blur-sm"
+      className="fixed inset-0 z-modal overflow-y-auto bg-black/40 backdrop-blur-sm"
       onClick={handleBackdropClick}
+      role="presentation"
     >
       <div className="min-h-full px-4 py-12">
         <div
           ref={modalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={titleId}
+          tabIndex={-1}
           className="relative mx-auto w-full max-w-md rounded-xl bg-white p-6 shadow-2xl"
         >
           {/* Close button */}
           <button
-            onClick={onClose}
+            onClick={() => onCloseRef.current()}
             className="absolute right-4 top-4 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
 
-          <h2 className="mb-6 text-2xl font-bold text-gray-900">
+          <h2 id={titleId} className="mb-6 text-2xl font-bold text-gray-900">
             Your Profile
           </h2>
 
           {/* Error message */}
           {auth.error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            <div
+              className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+              role="alert"
+              aria-live="polite"
+            >
               {auth.error.message}
               <button
                 onClick={auth.clearError}
@@ -91,7 +120,11 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
 
           {/* Success message */}
           {saved && (
-            <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+            <div
+              className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700"
+              role="status"
+              aria-live="polite"
+            >
               ✓ Profile saved successfully!
             </div>
           )}
@@ -124,6 +157,7 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={50}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Your name"
               />

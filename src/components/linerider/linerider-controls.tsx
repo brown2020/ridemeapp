@@ -65,6 +65,7 @@ function IconBtn({
     <button
       className={classes + (className || "")}
       disabled={disabled}
+      aria-label={tooltip}
       {...props}
     >
       {children}

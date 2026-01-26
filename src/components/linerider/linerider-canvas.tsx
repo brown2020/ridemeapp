@@ -411,8 +411,8 @@ export function LineriderCanvas() {
           : undefined
       }
       onContextMenu={(e) => e.preventDefault()}
-      aria-label="OpenRider canvas"
-      role="img"
+      aria-label="Line Rider canvas - Draw lines, play simulation, use keyboard shortcuts for tools"
+      role="application"
     />
   );
 }

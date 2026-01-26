@@ -79,6 +79,10 @@ export async function sendEmailLink(email: string): Promise<void> {
 export async function completeEmailLinkSignIn(
   url: string
 ): Promise<User | null> {
+  if (typeof window === "undefined") {
+    throw new Error("Email link sign-in can only be completed client-side");
+  }
+
   const auth = getFirebaseAuth();
 
   if (!isSignInWithEmailLink(auth, url)) {
