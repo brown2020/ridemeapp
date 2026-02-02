@@ -18,6 +18,7 @@ export {
   signOut,
   onAuthChange,
   getCurrentUser,
+  EmailRequiredError,
 } from "./auth";
 
 // User profile functions

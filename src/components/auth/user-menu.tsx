@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { AuthModal } from "./auth-modal";
+import { EmailConfirmModal } from "./email-confirm-modal";
 import { ProfileModal } from "./profile-modal";
 import { Avatar } from "./avatar";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -17,13 +18,18 @@ export function UserMenu() {
     return null;
   }
 
+  // Show email confirmation modal if needed (email link sign-in without stored email)
+  if (auth.pendingEmailLinkConfirmation) {
+    return <EmailConfirmModal auth={auth} />;
+  }
+
   // Signed out state (or loading while modal is open)
   if (!auth.user) {
     return (
       <>
         {/* Show loading spinner OR sign in button, but NOT when modal is open */}
         {auth.isLoading && !showAuthModal ? (
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-400">
             <LoadingSpinner className="h-4 w-4" />
           </div>
         ) : (

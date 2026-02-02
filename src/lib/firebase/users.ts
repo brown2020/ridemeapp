@@ -8,7 +8,7 @@ import {
 } from "firebase/firestore";
 import { getFirebaseDb } from "./config";
 import type { User } from "firebase/auth";
-import type { CharacterType } from "@/lib/linerider/characters";
+import { CHARACTER_TYPES, type CharacterType } from "@/lib/linerider/characters";
 
 /**
  * User profile stored in Firestore
@@ -32,10 +32,31 @@ export interface UserProfileData {
   character?: CharacterType;
 }
 
-function normalizeUserProfile(profile: UserProfile): UserProfile {
+/**
+ * Validate that raw Firestore data matches UserProfile schema
+ */
+function isValidUserProfileData(data: unknown): data is UserProfile {
+  if (!data || typeof data !== "object") return false;
+  const d = data as Record<string, unknown>;
+  return (
+    typeof d.uid === "string" &&
+    (d.email === null || typeof d.email === "string") &&
+    (d.displayName === null || typeof d.displayName === "string") &&
+    (d.photoURL === null || typeof d.photoURL === "string") &&
+    (d.character === undefined || CHARACTER_TYPES.includes(d.character as CharacterType))
+  );
+}
+
+/**
+ * Normalize and validate a user profile from Firestore data
+ */
+function normalizeUserProfile(data: unknown): UserProfile {
+  if (!isValidUserProfileData(data)) {
+    throw new Error("Invalid user profile data from Firestore");
+  }
   return {
-    ...profile,
-    character: profile.character || "ball",
+    ...data,
+    character: data.character || "ball",
   };
 }
 
@@ -56,8 +77,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     return null;
   }
 
-  const profile = docSnap.data() as UserProfile;
-  return normalizeUserProfile(profile);
+  return normalizeUserProfile(docSnap.data());
 }
 
 /**

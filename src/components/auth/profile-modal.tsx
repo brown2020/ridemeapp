@@ -91,13 +91,13 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
           {/* Close button */}
           <button
             onClick={() => onCloseRef.current()}
-            className="absolute right-4 top-4 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="absolute right-4 top-4 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
 
-          <h2 id={titleId} className="mb-6 text-2xl font-bold text-gray-900">
+          <h2 id={titleId} className="mb-6 text-2xl font-bold text-slate-900">
             Your Profile
           </h2>
 
@@ -138,8 +138,8 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
               size="lg"
             />
             <div>
-              <p className="text-sm text-gray-500">Signed in as</p>
-              <p className="font-medium text-gray-900">{auth.user?.email}</p>
+              <p className="text-sm text-slate-500">Signed in as</p>
+              <p className="font-medium text-slate-900">{auth.user?.email}</p>
             </div>
           </div>
 
@@ -148,7 +148,7 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
             <div>
               <label
                 htmlFor="displayName"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="mb-1 block text-sm font-medium text-slate-700"
               >
                 Display Name
               </label>
@@ -158,7 +158,7 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 maxLength={50}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Your name"
               />
             </div>
@@ -178,10 +178,10 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
             </button>
           </form>
 
-          <div className="mt-6 border-t border-gray-200 pt-6">
+          <div className="mt-6 border-t border-slate-200 pt-6">
             <button
               onClick={auth.signOut}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 shadow-sm transition hover:bg-gray-50"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
             >
               Sign Out
             </button>

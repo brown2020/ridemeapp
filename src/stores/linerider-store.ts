@@ -125,6 +125,10 @@ const DEFAULT_SETTINGS: LineriderSettings = {
 };
 const SPATIAL_CELL_SIZE = 200;
 
+/** Valid playback speeds */
+export const PLAYBACK_SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
+export type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
+
 export const useLineriderStore = create<LineriderStore>()(
   subscribeWithSelector((set, get) => ({
     tool: "draw",
@@ -371,8 +375,11 @@ export const useLineriderStore = create<LineriderStore>()(
         },
       })),
 
-    setPlaybackSpeed: (speed) =>
-      set((s) => ({ settings: { ...s.settings, playbackSpeed: speed } })),
+    setPlaybackSpeed: (speed) => {
+      // Validate speed is in allowed values
+      if (!PLAYBACK_SPEEDS.includes(speed as PlaybackSpeed)) return;
+      set((s) => ({ settings: { ...s.settings, playbackSpeed: speed } }));
+    },
 
     setCharacter: (character) => set({ character }),
 

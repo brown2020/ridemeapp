@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useLineriderStore } from "@/stores/linerider-store";
+import {
+  useLineriderStore,
+  PLAYBACK_SPEEDS,
+} from "@/stores/linerider-store";
 import { useShallow } from "zustand/react/shallow";
 import { UserMenu } from "@/components/auth";
+import { ZOOM } from "@/lib/linerider/constants";
 import {
   Pencil,
   Hand,
@@ -28,9 +32,6 @@ import {
   Rabbit,
   Menu,
 } from "lucide-react";
-
-// Available playback speeds
-const SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
 
 // Icon button component
 function IconBtn({
@@ -137,9 +138,6 @@ export function LineriderControls() {
     }))
   );
 
-  // Zoom limits (must match store)
-  const MIN_ZOOM = 0.2;
-  const MAX_ZOOM = 5;
 
   // Shared toolbar content components
   const DrawingTools = (
@@ -210,13 +208,13 @@ export function LineriderControls() {
       <div className="flex items-center space-x-1 bg-slate-50 rounded-lg p-0.5">
         <IconBtn
           onClick={() => {
-            const idx = SPEEDS.indexOf(
-              settings.playbackSpeed as (typeof SPEEDS)[number]
+            const idx = PLAYBACK_SPEEDS.indexOf(
+              settings.playbackSpeed as (typeof PLAYBACK_SPEEDS)[number]
             );
-            if (idx > 0) setPlaybackSpeed(SPEEDS[idx - 1]);
+            if (idx > 0) setPlaybackSpeed(PLAYBACK_SPEEDS[idx - 1]);
           }}
           tooltip={`Slower`}
-          disabled={settings.playbackSpeed <= SPEEDS[0]}
+          disabled={settings.playbackSpeed <= PLAYBACK_SPEEDS[0]}
         >
           <Turtle className="w-5 h-5" />
         </IconBtn>
@@ -225,13 +223,13 @@ export function LineriderControls() {
         </span>
         <IconBtn
           onClick={() => {
-            const idx = SPEEDS.indexOf(
-              settings.playbackSpeed as (typeof SPEEDS)[number]
+            const idx = PLAYBACK_SPEEDS.indexOf(
+              settings.playbackSpeed as (typeof PLAYBACK_SPEEDS)[number]
             );
-            if (idx < SPEEDS.length - 1) setPlaybackSpeed(SPEEDS[idx + 1]);
+            if (idx < PLAYBACK_SPEEDS.length - 1) setPlaybackSpeed(PLAYBACK_SPEEDS[idx + 1]);
           }}
           tooltip={`Faster`}
-          disabled={settings.playbackSpeed >= SPEEDS[SPEEDS.length - 1]}
+          disabled={settings.playbackSpeed >= PLAYBACK_SPEEDS[PLAYBACK_SPEEDS.length - 1]}
         >
           <Rabbit className="w-5 h-5" />
         </IconBtn>
@@ -244,14 +242,14 @@ export function LineriderControls() {
       <IconBtn
         onClick={zoomOut}
         tooltip="Zoom out (-)"
-        disabled={zoom <= MIN_ZOOM}
+        disabled={zoom <= ZOOM.MIN}
       >
         <ZoomOut className="w-5 h-5" />
       </IconBtn>
       <IconBtn
         onClick={zoomIn}
         tooltip="Zoom in (+)"
-        disabled={zoom >= MAX_ZOOM}
+        disabled={zoom >= ZOOM.MAX}
       >
         <ZoomIn className="w-5 h-5" />
       </IconBtn>
@@ -440,7 +438,7 @@ export function LineriderControls() {
                       D
                     </kbd>{" "}
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
-                      H
+                      H/P
                     </kbd>{" "}
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       E
@@ -464,6 +462,21 @@ export function LineriderControls() {
                       Space
                     </kbd>{" "}
                     → play/pause
+                  </div>
+                  <div>
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      G
+                    </kbd>{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      F
+                    </kbd>{" "}
+                    → grid/follow
+                  </div>
+                  <div>
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      R/Home/0
+                    </kbd>{" "}
+                    → reset view
                   </div>
                   <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">

@@ -74,10 +74,22 @@ export async function sendEmailLink(email: string): Promise<void> {
 }
 
 /**
+ * Error thrown when email is required to complete sign-in link flow
+ */
+export class EmailRequiredError extends Error {
+  constructor() {
+    super("Email is required to complete sign-in");
+    this.name = "EmailRequiredError";
+  }
+}
+
+/**
  * Complete sign-in with email link (call this when the page loads)
+ * If email is not in localStorage, throws EmailRequiredError
  */
 export async function completeEmailLinkSignIn(
-  url: string
+  url: string,
+  providedEmail?: string
 ): Promise<User | null> {
   if (typeof window === "undefined") {
     throw new Error("Email link sign-in can only be completed client-side");
@@ -89,16 +101,12 @@ export async function completeEmailLinkSignIn(
     return null;
   }
 
-  // Get the email from localStorage
-  let email = window.localStorage.getItem("emailForSignIn");
+  // Get the email from localStorage or use provided email
+  const email = providedEmail || window.localStorage.getItem("emailForSignIn");
 
   if (!email) {
-    // If missing, prompt the user for their email
-    email = window.prompt("Please provide your email for confirmation");
-  }
-
-  if (!email) {
-    throw new Error("Email is required to complete sign-in");
+    // Throw specific error so caller can show a proper modal
+    throw new EmailRequiredError();
   }
 
   const result = await signInWithEmailLink(auth, email, url);

@@ -14,6 +14,7 @@ import {
   signOut as firebaseSignOut,
   createOrUpdateUserProfile,
   isFirebaseConfigured,
+  EmailRequiredError,
   type UserProfile,
 } from "@/lib/firebase";
 import type { CharacterType } from "@/lib/linerider/characters";
@@ -25,6 +26,8 @@ type AuthState = Readonly<{
   error: Error | null;
   isConfigured: boolean;
   hasInitialized: boolean;
+  /** Set when email link sign-in needs email confirmation */
+  pendingEmailLinkUrl: string | null;
 }>;
 
 type AuthActions = Readonly<{
@@ -33,6 +36,10 @@ type AuthActions = Readonly<{
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   sendEmailLink: (email: string) => Promise<boolean>;
+  /** Complete pending email link sign-in with provided email */
+  confirmEmailLinkSignIn: (email: string) => Promise<void>;
+  /** Cancel pending email link sign-in */
+  cancelEmailLinkSignIn: () => void;
   signOut: () => Promise<void>;
   updateProfile: (
     displayName: string,
@@ -59,10 +66,12 @@ export const useAuthStore = create<AuthStore>()(
     error: null,
     isConfigured: false,
     hasInitialized: false,
+    pendingEmailLinkUrl: null,
 
     init: () => {
-      const s = get();
-      if (s.hasInitialized) return;
+      // Check and set hasInitialized atomically to prevent race conditions
+      if (get().hasInitialized) return;
+      set({ hasInitialized: true });
 
       const configured = isFirebaseConfigured();
       if (!configured) {
@@ -71,7 +80,6 @@ export const useAuthStore = create<AuthStore>()(
           authUnsubscribe = null;
         }
         set({
-          hasInitialized: true,
           isConfigured: false,
           isLoading: false,
           user: null,
@@ -81,7 +89,7 @@ export const useAuthStore = create<AuthStore>()(
         return;
       }
 
-      set({ hasInitialized: true, isConfigured: true });
+      set({ isConfigured: true });
 
       // Handle email link sign-in (passwordless) once on init
       if (typeof window !== "undefined") {
@@ -99,9 +107,18 @@ export const useAuthStore = create<AuthStore>()(
               }
             })
             .catch((error) => {
-              set({
-                error: asError(error, "Failed to complete email sign-in"),
-              });
+              if (error instanceof EmailRequiredError) {
+                // Email not in localStorage - prompt user via modal
+                set({
+                  pendingEmailLinkUrl: url,
+                  isLoading: false,
+                });
+              } else {
+                set({
+                  error: asError(error, "Failed to complete email sign-in"),
+                  isLoading: false,
+                });
+              }
             });
         }
       }
@@ -220,6 +237,36 @@ export const useAuthStore = create<AuthStore>()(
         });
         return false;
       }
+    },
+
+    confirmEmailLinkSignIn: async (email: string) => {
+      const url = get().pendingEmailLinkUrl;
+      if (!url) return;
+
+      set({ isLoading: true, error: null });
+      try {
+        const user = await completeEmailLinkSignIn(url, email);
+        if (user) {
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
+        }
+        set({ pendingEmailLinkUrl: null });
+        // Auth listener will handle the rest
+      } catch (error) {
+        set({
+          isLoading: false,
+          error: asError(error, "Failed to complete email sign-in"),
+        });
+      }
+    },
+
+    cancelEmailLinkSignIn: () => {
+      // Clear the pending URL and remove from address bar
+      window.history.replaceState({}, document.title, window.location.pathname);
+      set({ pendingEmailLinkUrl: null });
     },
 
     signOut: async () => {

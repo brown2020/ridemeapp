@@ -13,11 +13,11 @@ import {
   buildSegmentPaths,
 } from "@/lib/linerider/renderer";
 import { drawCharacter } from "@/lib/linerider/characters";
+import { PHYSICS_DT } from "@/lib/linerider/constants";
 
 type PointerMode = "draw" | "pan" | "erase" | null;
 
 const MIN_DRAW_DIST_PX = 3;
-const PHYSICS_DT = 1 / 60; // Fixed physics timestep
 
 /** Helper to get screen position from pointer event */
 function screenFromEvent(e: PointerEvent, el: HTMLCanvasElement): Vec2 {
@@ -78,8 +78,12 @@ export function LineriderCanvas() {
     let mounted = true;
 
     function renderLoop(nowMs: number) {
+      // Check mounted first before clearing the raf ref
+      if (!mounted) {
+        rafRef.current = null;
+        return;
+      }
       rafRef.current = null;
-      if (!mounted) return;
 
       const canvas = canvasRef.current;
       if (!canvas) return;

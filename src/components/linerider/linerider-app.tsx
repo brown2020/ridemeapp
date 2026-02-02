@@ -49,11 +49,12 @@ export function LineriderApp() {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      // Don't capture if typing in an input
+      // Don't capture if typing in an input or contenteditable element
       if (
         e.target instanceof HTMLInputElement ||
         e.target instanceof HTMLTextAreaElement ||
-        e.target instanceof HTMLSelectElement
+        e.target instanceof HTMLSelectElement ||
+        (e.target instanceof HTMLElement && e.target.isContentEditable)
       ) {
         return;
       }

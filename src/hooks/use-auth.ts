@@ -10,6 +10,8 @@ interface AuthState {
   isLoading: boolean;
   error: Error | null;
   isConfigured: boolean;
+  /** True when email link sign-in needs email confirmation */
+  pendingEmailLinkConfirmation: boolean;
 }
 
 interface AuthActions {
@@ -17,6 +19,8 @@ interface AuthActions {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   sendEmailLink: (email: string) => Promise<boolean>;
+  confirmEmailLinkSignIn: (email: string) => Promise<void>;
+  cancelEmailLinkSignIn: () => void;
   signOut: () => Promise<void>;
   updateProfile: (
     displayName: string,
@@ -45,10 +49,13 @@ export function useAuth(): UseAuthReturn {
       isLoading: s.isLoading,
       error: s.error,
       isConfigured: s.isConfigured,
+      pendingEmailLinkConfirmation: s.pendingEmailLinkUrl !== null,
       signInWithGoogle: s.signInWithGoogle,
       signInWithEmail: s.signInWithEmail,
       signUpWithEmail: s.signUpWithEmail,
       sendEmailLink: s.sendEmailLink,
+      confirmEmailLinkSignIn: s.confirmEmailLinkSignIn,
+      cancelEmailLinkSignIn: s.cancelEmailLinkSignIn,
       signOut: s.signOut,
       updateProfile: s.updateProfile,
       clearError: s.clearError,

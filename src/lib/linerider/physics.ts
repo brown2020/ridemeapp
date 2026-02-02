@@ -72,65 +72,7 @@ export interface RiderState {
 }
 
 /**
- * Creates initial rider state at the given position
- * The rider is a simplified ragdoll with key points
- */
-export function createRider(startPos: Vec2): RiderState {
-  // Simplified Bosh model - main points relative to start position
-  const sledBack = { x: startPos.x - 10, y: startPos.y };
-  const sledFront = { x: startPos.x + 10, y: startPos.y };
-  const bodyBottom = { x: startPos.x - 5, y: startPos.y - 15 };
-  const bodyTop = { x: startPos.x - 2, y: startPos.y - 35 };
-  const shoulder = { x: startPos.x + 3, y: startPos.y - 30 };
-  const hand = { x: startPos.x + 12, y: startPos.y - 20 };
-
-  const createPoint = (
-    pos: Vec2,
-    friction: number = PHYSICS.FRICTION_NORMAL
-  ): RiderPoint => ({
-    pos: { ...pos },
-    prevPos: { ...pos },
-    friction,
-  });
-
-  const points: RiderPoint[] = [
-    createPoint(sledBack, 0.8), // 0: sled back (contact point)
-    createPoint(sledFront, 0.8), // 1: sled front (contact point)
-    createPoint(bodyBottom, 0.0), // 2: body bottom (hip)
-    createPoint(bodyTop, 0.0), // 3: body top (head)
-    createPoint(shoulder, 0.0), // 4: shoulder
-    createPoint(hand, 0.0), // 5: hand holding rope
-  ];
-
-  // Distance constraints to maintain shape
-  const constraints: RiderConstraint[] = [
-    // Sled
-    { p1: 0, p2: 1, length: 20 },
-    // Body
-    { p1: 2, p2: 3, length: 20 },
-    // Connect to sled
-    { p1: 0, p2: 2, length: 18 },
-    { p1: 1, p2: 2, length: 18 },
-    // Arm
-    { p1: 4, p2: 5, length: 15 },
-    { p1: 3, p2: 4, length: 8 },
-    // Rope to sled
-    { p1: 5, p2: 1, length: 12 },
-    // Stability constraints
-    { p1: 0, p2: 3, length: 38 },
-    { p1: 1, p2: 3, length: 35 },
-  ];
-
-  return {
-    points,
-    constraints,
-    crashed: false,
-    frame: 0,
-  };
-}
-
-/**
- * Creates a simple single-point rider (ball) for simpler physics
+ * Creates a simple single-point rider (ball) for physics simulation
  */
 export function createSimpleRider(startPos: Vec2): RiderState {
   const createPoint = (pos: Vec2): RiderPoint => ({
@@ -146,9 +88,6 @@ export function createSimpleRider(startPos: Vec2): RiderState {
     frame: 0,
   };
 }
-
-// Alias to avoid conflict with imported 'sub' function name in stepPhysics
-const vecSub = sub;
 
 /**
  * Step the physics simulation forward by dt seconds.
@@ -172,10 +111,10 @@ export function stepPhysics(
   // Scale physics by dt (normalized to 1/60 second)
   const timeScale = dt * 60;
 
-  for (let sub = 0; sub < PHYSICS.SUBSTEPS; sub++) {
+  for (let substep = 0; substep < PHYSICS.SUBSTEPS; substep++) {
     // Apply Verlet integration with gravity
     for (const point of newPoints) {
-      const velocity = vecSub(point.pos, point.prevPos);
+      const velocity = sub(point.pos, point.prevPos);
 
       // Clamp velocity to prevent tunneling
       const speed = len(velocity);
@@ -200,7 +139,7 @@ export function stepPhysics(
         const p1 = newPoints[constraint.p1];
         const p2 = newPoints[constraint.p2];
 
-        const delta = vecSub(p2.pos, p1.pos);
+        const delta = sub(p2.pos, p1.pos);
         const dist = len(delta);
         if (dist < 0.0001) continue;
 
@@ -208,7 +147,7 @@ export function stepPhysics(
         const correction = mul(delta, diff * 0.5);
 
         p1.pos = add(p1.pos, correction);
-        p2.pos = vecSub(p2.pos, correction);
+        p2.pos = sub(p2.pos, correction);
       }
     }
 
@@ -235,11 +174,11 @@ export function stepPhysics(
           let normal: Vec2;
           if (dist < 0.0001) {
             // Rider is exactly on line - use perpendicular based on line direction
-            const lineDir = vecSub(seg.b, seg.a);
+            const lineDir = sub(seg.b, seg.a);
             // Use consistent normal direction (left side of line when going a->b)
             normal = normalize(v(-lineDir.y, lineDir.x));
           } else {
-            normal = mul(vecSub(point.pos, closest.point), 1 / dist);
+            normal = mul(sub(point.pos, closest.point), 1 / dist);
           }
 
           // Push rider out of collision
@@ -247,8 +186,8 @@ export function stepPhysics(
           point.pos = add(point.pos, mul(normal, penetration * 1.01)); // slight over-correction
 
           // Calculate velocity
-          const velocity = vecSub(point.pos, point.prevPos);
-          const tangent = normalize(vecSub(seg.b, seg.a));
+          const velocity = sub(point.pos, point.prevPos);
+          const tangent = normalize(sub(seg.b, seg.a));
 
           const vn = dot(velocity, normal); // velocity into surface
           const vt = dot(velocity, tangent); // velocity along surface
@@ -267,12 +206,12 @@ export function stepPhysics(
 
           // Reconstruct velocity
           const newVelocity = add(mul(tangent, vtDamped), mul(normal, vnOut));
-          point.prevPos = vecSub(point.pos, newVelocity);
+          point.prevPos = sub(point.pos, newVelocity);
 
           // Apply acceleration boost for red lines
           if (seg.type === "accel") {
             // Boost in direction of the line (a -> b)
-            const accelDir = normalize(vecSub(seg.b, seg.a));
+            const accelDir = normalize(sub(seg.b, seg.a));
             // Only boost if moving roughly in line direction
             const alignment = dot(normalize(velocity), accelDir);
             if (alignment > -0.5) {

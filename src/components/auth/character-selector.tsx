@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   CHARACTER_TYPES,
   CHARACTERS,
@@ -28,13 +28,18 @@ function CharacterPreview({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
   const animationRef = useRef<number | undefined>(undefined);
+  // Track canvas error via ref to avoid setState in effect
+  const canvasErrorRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      canvasErrorRef.current = true;
+      return;
+    }
 
     // Set up canvas for retina displays
     const dpr = window.devicePixelRatio || 1;
@@ -85,7 +90,7 @@ function CharacterPreview({
       className={`group relative flex flex-col items-center rounded-lg border-2 p-2 transition-all ${
         isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
-          : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+          : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"
       }`}
     >
       <canvas
@@ -93,7 +98,7 @@ function CharacterPreview({
         className="rounded-md"
         style={{ imageRendering: "pixelated" }}
       />
-      <span className="mt-1 text-xs font-medium text-gray-700">
+      <span className="mt-1 text-xs font-medium text-slate-700">
         {info.name}
       </span>
       {isSelected && (
@@ -117,7 +122,7 @@ export function CharacterSelector({
 }: CharacterSelectorProps) {
   return (
     <div className="space-y-3">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-slate-700">
         Choose Your Character
       </label>
       <div className="grid grid-cols-4 gap-2">
@@ -130,7 +135,7 @@ export function CharacterSelector({
           />
         ))}
       </div>
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-slate-500">
         {CHARACTERS[selectedCharacter].description}
       </p>
     </div>

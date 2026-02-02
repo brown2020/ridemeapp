@@ -96,7 +96,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
           {/* Close button */}
           <button
             onClick={() => onCloseRef.current()}
-            className="absolute right-4 top-4 p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="absolute right-4 top-4 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -123,12 +123,12 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                 </svg>
               </div>
 
-              <h2 id={titleId} className="mb-2 text-2xl font-bold text-gray-900">
+              <h2 id={titleId} className="mb-2 text-2xl font-bold text-slate-900">
                 Check your email
               </h2>
 
-              <p className="mb-2 text-gray-600">We sent a sign-in link to:</p>
-              <p className="mb-6 font-medium text-gray-900">{sentToEmail}</p>
+              <p className="mb-2 text-slate-600">We sent a sign-in link to:</p>
+              <p className="mb-6 font-medium text-slate-900">{sentToEmail}</p>
 
               <div className="mb-6 rounded-lg bg-amber-50 p-4 text-left text-sm text-amber-800">
                 <p className="mb-2 font-medium">Don&apos;t see it?</p>
@@ -160,7 +160,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                 <button
                   onClick={handleResendEmail}
                   disabled={auth.isLoading}
-                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
                 >
                   {auth.isLoading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -186,7 +186,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                       setEmailLinkSent(false);
                       setSentToEmail("");
                     }}
-                    className="text-sm text-gray-500 hover:text-gray-700"
+                    className="text-sm text-slate-500 hover:text-slate-700"
                   >
                     ← Back to sign in
                   </button>
@@ -195,7 +195,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
             </div>
           ) : (
             <>
-              <h2 id={titleId} className="mb-6 text-2xl font-bold text-gray-900">
+              <h2 id={titleId} className="mb-6 text-2xl font-bold text-slate-900">
                 {mode === "signin" && "Sign In"}
                 {mode === "signup" && "Create Account"}
                 {mode === "email-link" && "Sign In with Email Link"}
@@ -222,7 +222,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
               <button
                 onClick={handleGoogleSignIn}
                 disabled={auth.isLoading}
-                className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:opacity-50"
+                className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                   <path
@@ -246,9 +246,9 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
               </button>
 
               <div className="my-4 flex items-center gap-3">
-                <div className="h-px flex-1 bg-gray-200" />
-                <span className="text-sm text-gray-500">or</span>
-                <div className="h-px flex-1 bg-gray-200" />
+                <div className="h-px flex-1 bg-slate-200" />
+                <span className="text-sm text-slate-500">or</span>
+                <div className="h-px flex-1 bg-slate-200" />
               </div>
 
               {/* Email form */}
@@ -256,7 +256,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                 <div>
                   <label
                     htmlFor="email"
-                    className="mb-1 block text-sm font-medium text-gray-700"
+                    className="mb-1 block text-sm font-medium text-slate-700"
                   >
                     Email
                   </label>
@@ -266,7 +266,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="you@example.com"
                   />
                 </div>
@@ -275,7 +275,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                   <div>
                     <label
                       htmlFor="password"
-                      className="mb-1 block text-sm font-medium text-gray-700"
+                      className="mb-1 block text-sm font-medium text-slate-700"
                     >
                       Password
                     </label>
@@ -286,7 +286,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       minLength={6}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       placeholder="••••••••"
                     />
                   </div>
@@ -313,7 +313,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
               </form>
 
               {/* Mode switcher */}
-              <div className="mt-6 space-y-2 text-center text-sm text-gray-600">
+              <div className="mt-6 space-y-2 text-center text-sm text-slate-600">
                 {mode === "signin" && (
                   <>
                     <p>
