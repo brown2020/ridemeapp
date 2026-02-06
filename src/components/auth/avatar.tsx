@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 
 interface AvatarProps {
   /** Photo URL from profile or auth provider */
@@ -20,6 +21,8 @@ const sizeClasses = {
   md: "h-10 w-10 text-base",
   lg: "h-16 w-16 text-2xl",
 };
+
+const sizePx: Record<string, number> = { sm: 28, md: 40, lg: 64 };
 
 /**
  * Avatar component that displays a user's photo or a fallback initial.
@@ -52,12 +55,15 @@ export function Avatar({
   }
 
   return (
-    <img
+    <Image
       src={photoURL}
       alt={displayName || "Profile"}
+      width={sizePx[size]}
+      height={sizePx[size]}
       className={`rounded-full object-cover ${sizeClasses[size]} ${className}`}
       onError={() => setImageError(true)}
       referrerPolicy="no-referrer"
+      unoptimized
     />
   );
 }

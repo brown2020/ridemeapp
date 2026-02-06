@@ -28,18 +28,13 @@ function CharacterPreview({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef(0);
   const animationRef = useRef<number | undefined>(undefined);
-  // Track canvas error via ref to avoid setState in effect
-  const canvasErrorRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      canvasErrorRef.current = true;
-      return;
-    }
+    if (!ctx) return;
 
     // Set up canvas for retina displays
     const dpr = window.devicePixelRatio || 1;

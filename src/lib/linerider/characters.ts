@@ -302,8 +302,6 @@ export function drawSkateboarder(
   const speed = len(velocity) * 60;
   const dir = speed > 0.5 ? normalize(velocity) : v(1, 0);
   
-  const facingRight = dir.x >= 0;
-  const flip = facingRight ? 1 : -1;
   const lean = Math.atan2(dir.y, Math.abs(dir.x)) * 0.4;
   const bounce = Math.sin(frame * 0.25) * (speed > 2 ? 1 : 0.3);
 
@@ -322,7 +320,6 @@ export function drawSkateboarder(
 
   // Wheels
   ctx.fillStyle = colors.wheels;
-  const wheelSpin = frame * 0.5;
   for (const wx of [-10, 10]) {
     ctx.beginPath();
     ctx.arc(wx, 12, 3, 0, Math.PI * 2);
@@ -622,4 +619,3 @@ export function drawCharacterPreview(
   
   ctx.restore();
 }
-

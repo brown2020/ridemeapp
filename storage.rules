@@ -13,7 +13,7 @@ service firebase.storage {
       return request.auth != null && request.auth.uid == uid;
     }
 
-    // Avatars: small images only
+    // Avatars: small images only (5MB, image content type)
     match /users/{uid}/avatars/{fileName} {
       allow read: if isOwner(uid);
       allow write: if isOwner(uid)
@@ -21,40 +21,19 @@ service firebase.storage {
                    && request.resource.contentType.matches('image/.*');
     }
 
-    // Default for user files: owner only + basic size limit to reduce abuse
-    match /users/{uid}/{allPaths=**} {
+    // Track thumbnails: images up to 2MB
+    match /users/{uid}/tracks/{trackId}/{fileName} {
       allow read: if isOwner(uid);
-      allow write: if isOwner(uid) && request.resource.size < 10 * 1024 * 1024;
+      allow write: if isOwner(uid)
+                   && request.resource.size < 2 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
     }
-    
-    // ============================================
-    // OPTIONAL: FILE SIZE & TYPE RESTRICTIONS
-    // ============================================
-    // Uncomment and modify these rules if you want to add restrictions
-    
-    // Example: Limit uploads to 5MB and only allow images
-    // match /users/{uid}/avatars/{fileName} {
-    //   allow read: if request.auth != null && request.auth.uid == uid;
-    //   allow write: if request.auth != null 
-    //                && request.auth.uid == uid
-    //                && request.resource.size < 5 * 1024 * 1024  // 5MB limit
-    //                && request.resource.contentType.matches('image/.*');
-    // }
-    
-    // Example: Limit track thumbnails to 2MB
-    // match /users/{uid}/tracks/{trackId}/thumbnail {
-    //   allow read: if request.auth != null && request.auth.uid == uid;
-    //   allow write: if request.auth != null 
-    //                && request.auth.uid == uid
-    //                && request.resource.size < 2 * 1024 * 1024;  // 2MB limit
-    // }
-    
+
     // ============================================
     // DENY ALL OTHER ACCESS
     // ============================================
-    // Any path not under /users/{uid}/ is denied by default
-    // This prevents unauthorized access to any other storage paths
+    // Only explicitly matched paths above are allowed.
+    // Any path not under a specific match rule is denied by default.
     
   }
 }
-

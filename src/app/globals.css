@@ -22,13 +22,7 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentcolor);
   }
-}
 
-@utility text-balance {
-  text-wrap: balance;
-}
-
-@layer utilities {
   :root {
     --background: #ffffff;
     --foreground: #171717;
@@ -49,4 +43,8 @@
     height: 100dvh;
     overflow: hidden;
   }
+}
+
+@utility text-balance {
+  text-wrap: balance;
 }

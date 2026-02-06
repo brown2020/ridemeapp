@@ -47,7 +47,17 @@ service cloud.firestore {
       // ----------------------------------------
       // User's saved tracks: /users/{uid}/tracks/{trackId}
       match /tracks/{trackId} {
-        allow read, write: if isOwner();
+        function isValidTrack() {
+          let data = request.resource.data;
+          return data.keys().hasAll(['name']) &&
+                 data.name is string &&
+                 data.name.size() <= 100;
+        }
+
+        allow read: if isOwner();
+        allow create: if isOwner() && isValidTrack();
+        allow update: if isOwner() && isValidTrack();
+        allow delete: if isOwner();
       }
       
       // ----------------------------------------
@@ -55,15 +65,9 @@ service cloud.firestore {
       // ----------------------------------------
       // User preferences: /users/{uid}/settings/{settingId}
       match /settings/{settingId} {
-        allow read, write: if isOwner();
-      }
-      
-      // ----------------------------------------
-      // ANY OTHER SUBCOLLECTIONS
-      // ----------------------------------------
-      // Catch-all for any future subcollections under the user document
-      match /{subcollection}/{docId} {
-        allow read, write: if isOwner();
+        allow read: if isOwner();
+        allow write: if isOwner()
+                     && request.resource.data.keys().size() <= 20;
       }
     }
     
@@ -75,4 +79,3 @@ service cloud.firestore {
     
   }
 }
-

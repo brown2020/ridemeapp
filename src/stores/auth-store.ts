@@ -50,8 +50,36 @@ type AuthActions = Readonly<{
 
 export type AuthStore = AuthState & AuthActions;
 
+/**
+ * Known Firebase Auth error codes mapped to user-friendly messages.
+ * These are expected user-facing outcomes, not application errors.
+ */
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  "auth/invalid-credential": "Invalid email or password. Please try again.",
+  "auth/user-not-found": "No account found with this email address.",
+  "auth/wrong-password": "Incorrect password. Please try again.",
+  "auth/email-already-in-use": "An account with this email already exists.",
+  "auth/too-many-requests":
+    "Too many attempts. Please wait a moment and try again.",
+  "auth/weak-password": "Password must be at least 6 characters.",
+  "auth/invalid-email": "Please enter a valid email address.",
+  "auth/network-request-failed":
+    "Network error. Please check your connection.",
+  "auth/popup-closed-by-user": "Sign-in was cancelled.",
+  "auth/user-disabled": "This account has been disabled.",
+  "auth/expired-action-code": "This sign-in link has expired. Please request a new one.",
+  "auth/invalid-action-code": "This sign-in link is invalid or has already been used.",
+};
+
 function asError(error: unknown, fallbackMessage: string): Error {
-  if (error instanceof Error) return error;
+  if (error instanceof Error) {
+    // Check for Firebase Auth error codes and return a friendly message
+    const code = (error as { code?: string }).code;
+    if (code && code in AUTH_ERROR_MESSAGES) {
+      return new Error(AUTH_ERROR_MESSAGES[code]);
+    }
+    return error;
+  }
   if (typeof error === "string") return new Error(error);
   return new Error(fallbackMessage);
 }
@@ -319,5 +347,3 @@ export const useAuthStore = create<AuthStore>()(
     clearError: () => set({ error: null }),
   }))
 );
-
-

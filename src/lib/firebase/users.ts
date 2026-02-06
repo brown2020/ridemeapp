@@ -1,10 +1,10 @@
 import {
   doc,
-  getDoc,
   setDoc,
-  updateDoc,
+  getDoc,
   serverTimestamp,
   type Timestamp,
+  type FieldValue,
 } from "firebase/firestore";
 import { getFirebaseDb } from "./config";
 import type { User } from "firebase/auth";
@@ -43,7 +43,8 @@ function isValidUserProfileData(data: unknown): data is UserProfile {
     (d.email === null || typeof d.email === "string") &&
     (d.displayName === null || typeof d.displayName === "string") &&
     (d.photoURL === null || typeof d.photoURL === "string") &&
-    (d.character === undefined || CHARACTER_TYPES.includes(d.character as CharacterType))
+    (d.character === undefined ||
+      CHARACTER_TYPES.includes(d.character as CharacterType))
   );
 }
 
@@ -68,7 +69,9 @@ const USERS_COLLECTION = "users";
 /**
  * Get a user profile by UID
  */
-export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+export async function getUserProfile(
+  uid: string
+): Promise<UserProfile | null> {
   const db = getFirebaseDb();
   const docRef = doc(db, USERS_COLLECTION, uid);
   const docSnap = await getDoc(docRef);
@@ -81,8 +84,9 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 }
 
 /**
- * Create or update a user profile from Firebase Auth user
- * Called after successful authentication
+ * Create or update a user profile from Firebase Auth user.
+ * Uses setDoc with merge to avoid race conditions between concurrent
+ * onAuthStateChanged callbacks (no read-then-write needed).
  */
 export async function createOrUpdateUserProfile(
   user: User,
@@ -90,74 +94,73 @@ export async function createOrUpdateUserProfile(
 ): Promise<UserProfile> {
   const db = getFirebaseDb();
   const docRef = doc(db, USERS_COLLECTION, user.uid);
-  const docSnap = await getDoc(docRef);
 
-  if (!docSnap.exists()) {
-    // Create new profile
-    const newProfile: Omit<UserProfile, "createdAt" | "updatedAt"> & {
-      createdAt: ReturnType<typeof serverTimestamp>;
-      updatedAt: ReturnType<typeof serverTimestamp>;
-    } = {
-      uid: user.uid,
-      email: user.email,
-      displayName: additionalData?.displayName || user.displayName,
-      photoURL: additionalData?.photoURL || user.photoURL,
-      character: additionalData?.character || "ball",
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    };
-
-    await setDoc(docRef, newProfile);
-
-    const created = await getUserProfile(user.uid);
-    if (!created) throw new Error("Failed to load profile after create");
-    return created;
-  }
-
-  // Get existing data
-  const existingData = docSnap.data();
-
-  // Update existing profile with any new data from auth
-  const updates: Record<string, unknown> = {
+  const profileData: Record<string, unknown> = {
+    uid: user.uid,
     email: user.email,
     updatedAt: serverTimestamp(),
   };
 
-  // Only update displayName/photoURL if provided
+  // Set displayName/photoURL from additional data or fall back to auth provider
   if (additionalData?.displayName) {
-    updates.displayName = additionalData.displayName;
+    profileData.displayName = additionalData.displayName;
+  } else if (user.displayName) {
+    profileData.displayName = user.displayName;
   }
+
   if (additionalData?.photoURL) {
-    updates.photoURL = additionalData.photoURL;
+    profileData.photoURL = additionalData.photoURL;
+  } else if (user.photoURL) {
+    profileData.photoURL = user.photoURL;
   }
+
   if (additionalData?.character) {
-    updates.character = additionalData.character;
+    profileData.character = additionalData.character;
   }
 
-  // Ensure character field exists (for profiles created before this feature)
-  if (!existingData.character) {
-    updates.character = "ball";
+  // merge: true creates the doc if missing, or merges fields if it exists.
+  // This eliminates the read-then-write race condition.
+  await setDoc(docRef, profileData, { merge: true });
+
+  // Read back to get the complete profile (including createdAt, character defaults)
+  const docSnap = await getDoc(docRef);
+  if (!docSnap.exists()) {
+    throw new Error("Failed to load profile after save");
   }
 
-  await updateDoc(docRef, updates);
+  const data = docSnap.data();
 
-  const updated = await getUserProfile(user.uid);
-  if (!updated) throw new Error("Failed to load profile after update");
-  return updated;
-}
+  // Ensure required fields exist for brand-new profiles
+  const needsDefaults =
+    !data.character || !data.createdAt || data.displayName === undefined;
 
-/**
- * Update user profile data
- */
-export async function updateUserProfile(
-  uid: string,
-  data: UserProfileData
-): Promise<void> {
-  const db = getFirebaseDb();
-  const docRef = doc(db, USERS_COLLECTION, uid);
+  if (needsDefaults) {
+    const defaults: Record<string, string | FieldValue | null> = {};
+    if (!data.character) defaults.character = "ball";
+    if (!data.createdAt) defaults.createdAt = serverTimestamp();
+    if (data.displayName === undefined) defaults.displayName = null;
+    if (data.photoURL === undefined) defaults.photoURL = null;
 
-  await updateDoc(docRef, {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+    await setDoc(docRef, defaults, { merge: true });
+
+    // Return constructed profile to avoid yet another read
+    return {
+      uid: user.uid,
+      email: user.email,
+      displayName:
+        (data.displayName as string | null) ??
+        (defaults.displayName as string | null) ??
+        null,
+      photoURL:
+        (data.photoURL as string | null) ??
+        (defaults.photoURL as string | null) ??
+        null,
+      character: ((data.character as CharacterType) ||
+        "ball") as CharacterType,
+      createdAt: (data.createdAt as Timestamp) ?? null,
+      updatedAt: (data.updatedAt as Timestamp) ?? null,
+    };
+  }
+
+  return normalizeUserProfile(data);
 }

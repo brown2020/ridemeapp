@@ -15,6 +15,11 @@ import {
   buildSpatialHash,
   type SpatialHash,
 } from "@/lib/linerider/spatial-hash";
+import {
+  PLAYBACK_SPEEDS,
+  SPATIAL_CELL_SIZE,
+  type PlaybackSpeed,
+} from "@/lib/linerider/constants";
 import type { CharacterType } from "@/lib/linerider/characters";
 
 export type ToolMode = "draw" | "pan" | "erase";
@@ -123,11 +128,7 @@ const DEFAULT_SETTINGS: LineriderSettings = {
   isCameraFollowing: true,
   playbackSpeed: 1,
 };
-const SPATIAL_CELL_SIZE = 200;
-
-/** Valid playback speeds */
-export const PLAYBACK_SPEEDS = [0.25, 0.5, 1, 2, 4] as const;
-export type PlaybackSpeed = (typeof PLAYBACK_SPEEDS)[number];
+export { PLAYBACK_SPEEDS, type PlaybackSpeed };
 
 export const useLineriderStore = create<LineriderStore>()(
   subscribeWithSelector((set, get) => ({

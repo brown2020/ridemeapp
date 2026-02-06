@@ -11,10 +11,10 @@ export * from "./constants";
 export * from "./physics";
 
 // Spatial indexing
-export * from "./spatial-hash";
+export { buildSpatialHash, querySpatialHash, type SpatialHash } from "./spatial-hash";
 
 // Coordinate transforms
-export * from "./transform";
+export { screenToWorld } from "./transform";
 
 // Rendering
 export * from "./renderer";

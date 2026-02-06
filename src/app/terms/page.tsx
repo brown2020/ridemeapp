@@ -22,7 +22,7 @@ export default function TermsOfService() {
 
         <div className="prose prose-slate">
           <p className="text-slate-600">
-            <strong>Last updated:</strong> {new Date().toLocaleDateString()}
+            <strong>Last updated:</strong> February 6, 2026
           </p>
 
           <h2 className="mt-8 text-xl font-semibold text-slate-900">

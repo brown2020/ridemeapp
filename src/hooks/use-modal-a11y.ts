@@ -91,4 +91,3 @@ export function useModalA11y(opts: {
     };
   }, [opts.containerRef, opts.isOpen]);
 }
-

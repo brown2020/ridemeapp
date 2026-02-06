@@ -38,10 +38,6 @@ export function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
 
-export function perp(a: Vec2): Vec2 {
-  return { x: -a.y, y: a.x };
-}
-
 /** Line types matching classic Line Rider */
 export type LineType = "normal" | "accel" | "scenery";
 

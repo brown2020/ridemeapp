@@ -1,11 +1,5 @@
 // Firebase configuration and instances
-export {
-  getFirebaseApp,
-  getFirebaseAuth,
-  getFirebaseDb,
-  isFirebaseConfigured,
-  getEmailLinkRedirectUrl,
-} from "./config";
+export { isFirebaseConfigured } from "./config";
 
 // Authentication functions
 export {
@@ -17,7 +11,6 @@ export {
   isEmailSignInLink,
   signOut,
   onAuthChange,
-  getCurrentUser,
   EmailRequiredError,
 } from "./auth";
 
@@ -25,7 +18,6 @@ export {
 export {
   getUserProfile,
   createOrUpdateUserProfile,
-  updateUserProfile,
   type UserProfile,
   type UserProfileData,
 } from "./users";
