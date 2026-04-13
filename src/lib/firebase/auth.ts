@@ -150,11 +150,3 @@ export function onAuthChange(
   return onAuthStateChanged(auth, callback);
 }
 
-/**
- * Get the current user (may be null if not signed in)
- */
-export function getCurrentUser(): User | null {
-  if (!isFirebaseConfigured()) return null;
-  const auth = getFirebaseAuth();
-  return auth.currentUser;
-}

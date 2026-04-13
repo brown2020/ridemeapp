@@ -1,5 +1,5 @@
 import type { Vec2 } from "./math";
-import { v, sub, normalize, add, mul, len } from "./math";
+import { v, normalize, len } from "./math";
 import type { RiderState } from "./physics";
 
 function mulberry32(seed: number): () => number {
@@ -67,7 +67,7 @@ export const CHARACTERS: Record<CharacterType, CharacterInfo> = {
 /**
  * Colors for each character
  */
-export const CHARACTER_COLORS = {
+const CHARACTER_COLORS = {
   ball: {
     primary: "#ef4444",
     secondary: "#dc2626",
@@ -106,7 +106,7 @@ export const CHARACTER_COLORS = {
 /**
  * Draw the classic ball rider with flag
  */
-export function drawBallRider(
+function drawBallRider(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   pos: Vec2,
@@ -186,7 +186,7 @@ export function drawBallRider(
 /**
  * Draw snowboarder character
  */
-export function drawSnowboarder(
+function drawSnowboarder(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   pos: Vec2,
@@ -291,7 +291,7 @@ export function drawSnowboarder(
 /**
  * Draw skateboarder character
  */
-export function drawSkateboarder(
+function drawSkateboarder(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   pos: Vec2,
@@ -393,7 +393,7 @@ export function drawSkateboarder(
 /**
  * Draw horse rider character
  */
-export function drawHorseRider(
+function drawHorseRider(
   ctx: CanvasRenderingContext2D,
   zoom: number,
   pos: Vec2,

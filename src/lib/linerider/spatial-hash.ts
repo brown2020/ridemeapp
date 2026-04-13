@@ -91,38 +91,3 @@ export function querySpatialHash(
   return out;
 }
 
-/**
- * Query all segments that intersect a rectangular region
- */
-export function querySpatialHashRect(
-  hash: SpatialHash,
-  minX: number,
-  minY: number,
-  maxX: number,
-  maxY: number
-): Segment[] {
-  const { cellSize, grid } = hash;
-  const ix0 = cellIndex(minX, cellSize);
-  const ix1 = cellIndex(maxX, cellSize);
-  const iy0 = cellIndex(minY, cellSize);
-  const iy1 = cellIndex(maxY, cellSize);
-
-  const seen = new Set<string>();
-  const out: Segment[] = [];
-
-  for (let iy = iy0; iy <= iy1; iy++) {
-    for (let ix = ix0; ix <= ix1; ix++) {
-      const bucket = grid.get(cellKey(ix, iy));
-      if (!bucket) continue;
-
-      for (const seg of bucket) {
-        if (!seen.has(seg.id)) {
-          seen.add(seg.id);
-          out.push(seg);
-        }
-      }
-    }
-  }
-
-  return out;
-}

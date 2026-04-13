@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import type { Segment, Vec2, LineType } from "@/lib/linerider/math";
-import { clamp, distPointToSegment, v } from "@/lib/linerider/math";
+import { clamp, distPointToSegment } from "@/lib/linerider/math";
 import type { Camera, Viewport } from "@/lib/linerider/types";
 import {
   createSimpleRider,
@@ -23,8 +23,6 @@ import {
 import type { CharacterType } from "@/lib/linerider/characters";
 
 export type ToolMode = "draw" | "pan" | "erase";
-
-export type { Camera, Viewport };
 
 export type LineriderSettings = Readonly<{
   isGridVisible: boolean;
@@ -281,28 +279,26 @@ export const useLineriderStore = create<LineriderStore>()(
       })),
 
     setRiderStart: (p) =>
-      set((s) => ({
+      set({
         riderStart: p,
         isPlaying: false,
         rider: createSimpleRider(p),
         elapsedTime: 0,
-      })),
+      }),
 
     stepSimulation: (dt: number) => {
-      const s = get();
-
-      // Ensure spatial hash is up to date
-      if (s.spatialHashVersion !== s.trackVersion) {
+      // Ensure spatial hash is up to date before taking the snapshot
+      if (get().spatialHashVersion !== get().trackVersion) {
         get().rebuildSpatialHash();
       }
 
-      // Cache spatial hash to avoid multiple get() calls
-      const spatialHash = get().spatialHash;
+      // Take a single coherent snapshot after the rebuild
+      const s = get();
 
       const newRider = stepPhysics(
         s.rider,
         s.segments,
-        spatialHash,
+        s.spatialHash,
         dt * s.settings.playbackSpeed
       );
 

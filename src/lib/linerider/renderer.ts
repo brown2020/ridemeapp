@@ -11,20 +11,11 @@ export const LINE_COLORS = {
   stroke: "#111827", // Outline color
 } as const;
 
-/** Rider colors */
-export const RIDER_COLORS = {
-  sled: "#ffffff",
-  sledOutline: "#333333",
-  body: "#000000",
-  scarf: "#cc2222",
-  skin: "#ffd4a3",
-} as const;
-
 /**
  * Calculate grid spacing levels based on zoom
  * Returns [minorSpacing, majorSpacing] in world units
  */
-export function getGridSpacings(zoom: number): [number, number] {
+function getGridSpacings(zoom: number): [number, number] {
   // Base spacing that gives roughly 50px between minor lines
   const desiredMinorPx = 50;
   const raw = desiredMinorPx / Math.max(1e-6, zoom);

@@ -48,7 +48,7 @@ function IconBtn({
   tooltip?: string;
 }) {
   let classes =
-    "relative h-8 px-2 flex items-center gap-1 text-sm font-medium rounded-md transition-all duration-150 ";
+    "relative h-8 px-2 flex items-center gap-1 text-sm font-medium rounded-md transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 ";
 
   if (disabled) {
     classes += "text-slate-300 cursor-not-allowed";
@@ -67,6 +67,7 @@ function IconBtn({
       className={classes + (className || "")}
       disabled={disabled}
       aria-label={tooltip}
+      aria-pressed={active !== undefined ? active : undefined}
       {...props}
     >
       {children}
@@ -379,9 +380,10 @@ export function LineriderControls() {
             </div>
             <button
               onClick={() => setShowHelp(false)}
-              className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              aria-label="Close help"
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
           </div>
 
