@@ -6,6 +6,7 @@ import type { UseAuthReturn } from "@/hooks/use-auth";
 import { Avatar } from "./avatar";
 import { CharacterSelector } from "./character-selector";
 import type { CharacterType } from "@/lib/linerider/characters";
+import { useAuthStore } from "@/stores/auth-store";
 import { useLineriderStore } from "@/stores/linerider-store";
 import { X } from "lucide-react";
 import { useModalA11y } from "@/hooks/use-modal-a11y";
@@ -54,17 +55,22 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     await auth.updateProfile(displayName, character);
-    setSaved(true);
-    
-    // Clear any existing timeout before starting a new one
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+
+    // Only show success if no error occurred
+    const { error } = useAuthStore.getState();
+    if (!error) {
+      setSaved(true);
+
+      // Clear any existing timeout before starting a new one
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        setSaved(false);
+        timeoutRef.current = null;
+      }, 2000);
     }
-    
-    timeoutRef.current = setTimeout(() => {
-      setSaved(false);
-      timeoutRef.current = null;
-    }, 2000);
   };
 
   const handleBackdropClick = (e: React.MouseEvent) => {

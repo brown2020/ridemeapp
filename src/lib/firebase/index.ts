@@ -16,7 +16,6 @@ export {
 
 // User profile functions
 export {
-  getUserProfile,
   createOrUpdateUserProfile,
   type UserProfile,
   type UserProfileData,

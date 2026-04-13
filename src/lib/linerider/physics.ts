@@ -6,7 +6,6 @@ import {
   len,
   len2,
   normalize,
-  clamp,
   closestPointOnSegment,
   v,
   type Vec2,
@@ -20,7 +19,7 @@ import { querySpatialHash } from "./spatial-hash";
  * The original Line Rider ran at 40fps with specific gravity/friction values.
  * These are adjusted for smooth 60fps gameplay.
  */
-export const PHYSICS = {
+const PHYSICS = {
   /** Gravity in world units per tick (classic LR used ~0.175 per tick at 40fps) */
   GRAVITY: 0.25,
   /** Number of physics substeps per frame for stability */
@@ -46,14 +45,14 @@ export const PHYSICS = {
 } as const;
 
 /** Rider point - a single physics point in the rider */
-export interface RiderPoint {
+interface RiderPoint {
   pos: Vec2;
   prevPos: Vec2;
   friction: number;
 }
 
 /** Rider constraint - connects two points */
-export interface RiderConstraint {
+interface RiderConstraint {
   p1: number;
   p2: number;
   length: number;
@@ -212,12 +211,15 @@ export function stepPhysics(
           if (seg.type === "accel") {
             // Boost in direction of the line (a -> b)
             const accelDir = normalize(sub(seg.b, seg.a));
-            // Only boost if moving roughly in line direction
-            const alignment = dot(normalize(velocity), accelDir);
+            // Only boost if moving roughly in line direction (use post-collision velocity)
+            const alignment = len2(newVelocity) > 0.0001 ? dot(normalize(newVelocity), accelDir) : 0;
             if (alignment > -0.5) {
               const boost =
                 (PHYSICS.ACCEL_BOOST * timeScale) / PHYSICS.SUBSTEPS;
-              point.pos = add(point.pos, mul(accelDir, boost));
+              // Apply boost to both pos and prevPos so the velocity is preserved
+              const boostVec = mul(accelDir, boost);
+              point.pos = add(point.pos, boostVec);
+              point.prevPos = add(point.prevPos, boostVec);
             }
           }
         }
