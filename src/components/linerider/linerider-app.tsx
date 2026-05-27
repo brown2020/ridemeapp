@@ -20,6 +20,8 @@ export function LineriderApp() {
     clearTrack,
     toggleGrid,
     toggleCameraFollowing,
+    setFlag,
+    jumpToFlag,
     setCharacter,
     resetCamera,
     zoomIn,
@@ -35,6 +37,8 @@ export function LineriderApp() {
       clearTrack: s.clearTrack,
       toggleGrid: s.toggleGrid,
       toggleCameraFollowing: s.toggleCameraFollowing,
+      setFlag: s.setFlag,
+      jumpToFlag: s.jumpToFlag,
       setCharacter: s.setCharacter,
       resetCamera: s.resetCamera,
       zoomIn: s.zoomIn,
@@ -127,11 +131,25 @@ export function LineriderApp() {
         zoomOut();
       }
 
+      // Flag and camera follow (F / Shift+F)
+      if (key === "f") {
+        if (e.shiftKey) {
+          toggleCameraFollowing();
+        } else {
+          jumpToFlag();
+        }
+        return;
+      }
+
+      if (key === "i") {
+        setFlag();
+        return;
+      }
+
       // Other actions
       if (key === "r" || key === "home" || key === "0") resetCamera();
       if (key === "c") clearTrack();
       if (key === "g") toggleGrid();
-      if (key === "f") toggleCameraFollowing();
     }
 
     window.addEventListener("keydown", onKeyDown);
@@ -142,6 +160,8 @@ export function LineriderApp() {
     setTool,
     setLineType,
     toggleCameraFollowing,
+    setFlag,
+    jumpToFlag,
     toggleGrid,
     togglePlaying,
     stop,

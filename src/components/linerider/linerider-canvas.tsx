@@ -207,7 +207,14 @@ export function LineriderCanvas() {
 
       // Draw HUD
       const speed = len(riderVelocity);
-      drawHUD(ctx, viewport, state.elapsedTime, speed, state.isPlaying);
+      drawHUD(
+        ctx,
+        viewport,
+        state.elapsedTime,
+        speed,
+        state.isPlaying,
+        state.flag?.elapsedTime ?? null
+      );
 
       // Continue animation loop if playing or interacting
       const freshState = useLineriderStore.getState();
@@ -441,6 +448,7 @@ export function LineriderCanvas() {
           s.riderStart.x,
           s.riderStart.y,
           s.character,
+          s.flag?.elapsedTime ?? null,
         ] as const,
       () => requestRender()
     );

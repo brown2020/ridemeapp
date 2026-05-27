@@ -76,6 +76,7 @@ Verified in code (not docs):
 - **Physics:** Verlet ball rider, spatial hash collisions, out-of-bounds auto-pause, playback speeds `0.25×–4×` (validated in store).
 - **Camera:** Wheel zoom at cursor, follow toggle (`F`), grid toggle (`G`).
 - **History:** Undo (`⌘Z`) and redo (`⌘⇧Z`), max 200 steps each.
+- **Flags:** `I` sets bookmark; `F` jumps to flagged rider state (pauses).
 - **Characters:** ball, snowboarder, skateboarder, horse — canvas-rendered; profile sync when signed in.
 - **Auth:** Google popup, email/password, email link (with `EmailConfirmModal` when email missing from storage). Profiles at `/users/{uid}`.
 - **Legal pages:** `/privacy`, `/terms` (static). 404 has home link.
@@ -224,7 +225,9 @@ Stop and report (do not guess) when:
 | S / Escape | Stop (reset rider to start) |
 | + / - | Zoom in / out |
 | G | Toggle grid |
-| F | Toggle camera follow |
+| I | Set flag at current rider state |
+| F | Jump to flag (pauses) |
+| Shift+F | Toggle camera follow |
 | R / Home / 0 | Reset camera view only |
 | ⌘Z / Ctrl+Z | Undo |
 | ⌘⇧Z / Ctrl+Shift+Z | Redo |

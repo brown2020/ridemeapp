@@ -5,12 +5,18 @@ import { clamp, distPointToSegment } from "@/lib/linerider/math";
 import type { Camera, Viewport } from "@/lib/linerider/types";
 import {
   createSimpleRider,
+  cloneRider,
   stepPhysics,
   getRiderCenter,
   getRiderVelocity,
   isRiderOutOfBounds,
   type RiderState,
 } from "@/lib/linerider/physics";
+
+export type FlagSnapshot = Readonly<{
+  rider: RiderState;
+  elapsedTime: number;
+}>;
 import {
   buildSpatialHash,
   type SpatialHash,
@@ -46,6 +52,7 @@ type LineriderState = Readonly<{
   riderStart: Vec2;
   elapsedTime: number;
   character: CharacterType;
+  flag: FlagSnapshot | null;
 
   settings: LineriderSettings;
 
@@ -78,6 +85,8 @@ type LineriderActions = Readonly<{
   setPlaying: (isPlaying: boolean) => void;
   /** Stop playback and reset rider to start (time 0, not playing) */
   stop: () => void;
+  setFlag: () => void;
+  jumpToFlag: () => void;
   setRiderStart: (p: Vec2) => void;
 
   /** Step physics simulation forward by dt seconds */
@@ -166,6 +175,7 @@ export const useLineriderStore = create<LineriderStore>()(
     riderStart: DEFAULT_RIDER_START,
     elapsedTime: 0,
     character: "ball" as CharacterType,
+    flag: null,
 
     settings: DEFAULT_SETTINGS,
 
@@ -218,6 +228,7 @@ export const useLineriderStore = create<LineriderStore>()(
           isPlaying: false,
           rider: createSimpleRider(s.riderStart),
           elapsedTime: 0,
+          flag: null,
         };
       }),
 
@@ -313,7 +324,31 @@ export const useLineriderStore = create<LineriderStore>()(
         isPlaying: false,
         rider: createSimpleRider(s.riderStart),
         elapsedTime: 0,
+        flag: null,
       })),
+
+    setFlag: () =>
+      set((s) => ({
+        flag: {
+          rider: cloneRider(s.rider),
+          elapsedTime: s.elapsedTime,
+        },
+      })),
+
+    jumpToFlag: () =>
+      set((s) => {
+        if (!s.flag) return s;
+        const rider = cloneRider(s.flag.rider);
+        const camera = s.settings.isCameraFollowing
+          ? { ...s.camera, pos: getRiderCenter(rider) }
+          : s.camera;
+        return {
+          isPlaying: false,
+          rider,
+          elapsedTime: s.flag.elapsedTime,
+          camera,
+        };
+      }),
 
     setRiderStart: (p) =>
       set({
@@ -321,6 +356,7 @@ export const useLineriderStore = create<LineriderStore>()(
         isPlaying: false,
         rider: createSimpleRider(p),
         elapsedTime: 0,
+        flag: null,
       }),
 
     stepSimulation: (dt: number) => {

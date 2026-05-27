@@ -61,7 +61,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 | Zoom | ✅ | Wheel, +/- keys, toolbar |
 | Undo | ✅ | Max 200 steps |
 | Redo | ✅ | Max 200 steps; ⌘⇧Z / toolbar |
-| Flags / timeline | ❌ | |
+| Flags / timeline | ⚠️ Partial | Set/jump flag (`I`/`F`); no scrubbing yet |
 | Tab overview | ❌ | |
 | Track save/load | ❌ | Ephemeral in memory |
 | Track sharing | ❌ | |
@@ -119,7 +119,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 1. **No track persistence** — largest product gap.
 2. ~~**No straight-line tool**~~ — implemented (Milestone 2).
 3. ~~**No explicit Stop control**~~ — implemented (Milestone 3).
-4. **No flags, scrubbing, or tab overview.**
+4. **No timeline scrubbing or tab overview.**
 5. **No select/move/copy** — erase and redraw only.
 6. **No sharing or gallery.**
 7. **No touch-optimized gestures** — mouse/keyboard first.
@@ -199,7 +199,7 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 
 ---
 
-### Milestone 4 — Flag and jump
+### Milestone 4 — Flag and jump ✅
 
 **User value:** Iterate on one section of a long track (depends on Milestone 3).
 
@@ -207,10 +207,12 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 
 **Acceptance criteria:**
 
-- [ ] Flag set while playing or paused.
-- [ ] `F` restores flagged state and pauses.
-- [ ] HUD shows flag indicator when set.
-- [ ] Flag clears on clear track / new start.
+- [x] Flag set while playing or paused.
+- [x] `F` restores flagged state and pauses.
+- [x] HUD shows flag indicator when set.
+- [x] Flag clears on clear track / new start.
+
+**Implementation note (2026-05-26):** `FlagSnapshot` + `cloneRider` in store/physics; `setFlag` / `jumpToFlag`; HUD shows flagged time; `I` / `F` / `Shift+F` shortcuts; flag cleared on `stop`, `clearTrack`, `setRiderStart`. Tests in `linerider-store.test.ts` and `physics.test.ts`.
 
 ---
 

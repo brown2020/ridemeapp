@@ -289,7 +289,7 @@ export function LineriderControls() {
       <IconBtn
         active={settings.isCameraFollowing}
         onClick={toggleCameraFollowing}
-        tooltip="Follow rider (F)"
+        tooltip="Follow rider (Shift+F)"
       >
         <Focus className="w-5 h-5" />
       </IconBtn>
@@ -510,12 +510,23 @@ export function LineriderControls() {
                   </div>
                   <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
-                      G
+                      I
                     </kbd>{" "}
+                    → set flag,{" "}
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       F
                     </kbd>{" "}
-                    → grid/follow
+                    → jump to flag
+                  </div>
+                  <div>
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      G
+                    </kbd>{" "}
+                    → grid,{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      Shift+F
+                    </kbd>{" "}
+                    → follow rider
                   </div>
                   <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">

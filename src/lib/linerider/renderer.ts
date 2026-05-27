@@ -295,45 +295,62 @@ export function drawStartFlag(
 /**
  * Draw HUD overlay (timer, speed)
  */
+function formatElapsedTime(elapsedTime: number): string {
+  const minutes = Math.floor(elapsedTime / 60);
+  const seconds = Math.floor(elapsedTime % 60);
+  const ms = Math.floor((elapsedTime % 1) * 100);
+  return `${minutes.toString().padStart(2, "0")}:${seconds
+    .toString()
+    .padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
+}
+
 export function drawHUD(
   ctx: CanvasRenderingContext2D,
   viewport: Viewport,
   elapsedTime: number,
   speed: number,
-  isPlaying: boolean
+  isPlaying: boolean,
+  flagElapsedTime: number | null = null
 ): void {
-  // Time display
-  const minutes = Math.floor(elapsedTime / 60);
-  const seconds = Math.floor(elapsedTime % 60);
-  const ms = Math.floor((elapsedTime % 1) * 100);
-  const timeStr = `${minutes.toString().padStart(2, "0")}:${seconds
-    .toString()
-    .padStart(2, "0")}.${ms.toString().padStart(2, "0")}`;
+  const padding = 8;
+  const timeStr = formatElapsedTime(elapsedTime);
+  const flagStr =
+    flagElapsedTime !== null
+      ? `Flag ${formatElapsedTime(flagElapsedTime)}`
+      : null;
 
   ctx.font = "bold 16px monospace";
   ctx.textAlign = "right";
   ctx.textBaseline = "top";
 
-  // Background
-  const padding = 8;
-  const textWidth = ctx.measureText(timeStr).width;
+  const timeWidth = ctx.measureText(timeStr).width;
+  const flagWidth = flagStr ? ctx.measureText(flagStr).width : 0;
+  const boxWidth = Math.max(timeWidth, flagWidth) + padding * 2;
+  const boxHeight = flagStr ? 44 : 24;
+
   ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
   ctx.fillRect(
-    viewport.width - textWidth - padding * 3,
+    viewport.width - boxWidth - padding,
     padding,
-    textWidth + padding * 2,
-    24
+    boxWidth,
+    boxHeight
   );
 
-  // Text
   ctx.fillStyle = isPlaying ? "#22c55e" : "#666666";
   ctx.fillText(timeStr, viewport.width - padding * 2, padding + 4);
+
+  if (flagStr) {
+    ctx.font = "12px monospace";
+    ctx.fillStyle = "#d97706";
+    ctx.fillText(flagStr, viewport.width - padding * 2, padding + 26);
+  }
 
   // Speed indicator
   if (isPlaying && speed > 0.1) {
     const speedStr = `${(speed * 60).toFixed(0)} u/s`;
     ctx.font = "12px monospace";
     ctx.fillStyle = "#888888";
-    ctx.fillText(speedStr, viewport.width - padding * 2, padding + 28);
+    const speedY = flagStr ? padding + 44 : padding + 28;
+    ctx.fillText(speedStr, viewport.width - padding * 2, speedY);
   }
 }

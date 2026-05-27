@@ -235,6 +235,24 @@ export function stepPhysics(
   };
 }
 
+/** Deep clone rider state for flag snapshots and restore */
+export function cloneRider(rider: RiderState): RiderState {
+  return {
+    points: rider.points.map((p) => ({
+      pos: { x: p.pos.x, y: p.pos.y },
+      prevPos: { x: p.prevPos.x, y: p.prevPos.y },
+      friction: p.friction,
+    })),
+    constraints: rider.constraints.map((c) => ({
+      p1: c.p1,
+      p2: c.p2,
+      length: c.length,
+    })),
+    crashed: rider.crashed,
+    frame: rider.frame,
+  };
+}
+
 /**
  * Get the center position of the rider (for camera following)
  */

@@ -152,6 +152,77 @@ describe("linerider-store track edits", () => {
     expect(state.rider.points[0].pos).toEqual({ x: 50, y: 50 });
   });
 
+  it("setFlag and jumpToFlag restore rider state and pause", () => {
+    useLineriderStore.setState({
+      elapsedTime: 7.5,
+      isPlaying: true,
+      rider: {
+        ...useLineriderStore.getState().rider,
+        points: [
+          {
+            pos: { x: 40, y: 20 },
+            prevPos: { x: 39, y: 19 },
+            friction: 0.02,
+          },
+        ],
+      },
+    });
+
+    useLineriderStore.getState().setFlag();
+    useLineriderStore.getState().stop();
+
+    const afterStop = useLineriderStore.getState();
+    expect(afterStop.flag).toBeNull();
+    expect(afterStop.elapsedTime).toBe(0);
+
+    useLineriderStore.setState({
+      elapsedTime: 3,
+      rider: {
+        ...useLineriderStore.getState().rider,
+        points: [
+          {
+            pos: { x: 10, y: 5 },
+            prevPos: { x: 9, y: 4 },
+            friction: 0.02,
+          },
+        ],
+      },
+      flag: {
+        rider: {
+          points: [
+            {
+              pos: { x: 40, y: 20 },
+              prevPos: { x: 39, y: 19 },
+              friction: 0.02,
+            },
+          ],
+          constraints: [],
+          crashed: false,
+          frame: 0,
+        },
+        elapsedTime: 7.5,
+      },
+      isPlaying: true,
+    });
+
+    useLineriderStore.getState().jumpToFlag();
+    const afterJump = useLineriderStore.getState();
+    expect(afterJump.isPlaying).toBe(false);
+    expect(afterJump.elapsedTime).toBe(7.5);
+    expect(afterJump.rider.points[0].pos).toEqual({ x: 40, y: 20 });
+  });
+
+  it("clearTrack clears flag", () => {
+    useLineriderStore.setState({
+      flag: {
+        rider: useLineriderStore.getState().rider,
+        elapsedTime: 1,
+      },
+    });
+    useLineriderStore.getState().clearTrack();
+    expect(useLineriderStore.getState().flag).toBeNull();
+  });
+
   it("batches erase stroke into one history entry", () => {
     useLineriderStore.getState().pushHistory();
     useLineriderStore.getState().eraseAt(v(5, 0), 2, { recordHistory: false });

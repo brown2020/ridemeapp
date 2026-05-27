@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { v } from "./math";
 import {
+  cloneRider,
   createSimpleRider,
   getRiderCenter,
   isRiderOutOfBounds,
@@ -20,6 +21,16 @@ describe("isRiderOutOfBounds", () => {
   it("returns true when rider exceeds horizontal limits", () => {
     expect(isRiderOutOfBounds(createSimpleRider(v(-500_001, 0)))).toBe(true);
     expect(isRiderOutOfBounds(createSimpleRider(v(500_001, 0)))).toBe(true);
+  });
+});
+
+describe("cloneRider", () => {
+  it("produces an independent copy of rider points", () => {
+    const original = createSimpleRider(v(1, 2));
+    const copy = cloneRider(original);
+    expect(copy.points[0].pos).toEqual(original.points[0].pos);
+    expect(copy.points).not.toBe(original.points);
+    expect(copy.points[0].pos).not.toBe(original.points[0].pos);
   });
 });
 
