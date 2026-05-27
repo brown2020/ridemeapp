@@ -225,7 +225,7 @@ Storage:
 | `2`          | Acceleration line (red) |
 | `3`          | Scenery line (green)    |
 | `Space`      | Play / Pause            |
-| `R`          | Reset rider position    |
+| `R` / Home / `0` | Reset camera and rider to start |
 | `G`          | Toggle grid visibility  |
 | `F`          | Toggle camera follow    |
 | `C`          | Clear all lines         |
@@ -433,12 +433,12 @@ Contributions are welcome! Here's how you can help:
 1. **Fork** the repository
 2. **Clone** your fork locally
 3. **Install** dependencies: `npm install`
-4. **Create** a feature branch: `git checkout -b feature/amazing-feature`
+4. **Checkout** the `dev` branch (or branch from it for your fork)
 5. **Make** your changes
-6. **Lint** your code: `npm run lint`
-7. **Commit** your changes: `git commit -m 'Add amazing feature'`
-8. **Push** to your branch: `git push origin feature/amazing-feature`
-9. **Open** a Pull Request
+6. **Validate:** `npm run lint && npm run type-check && npm run build`
+7. **Commit** and push to your branch, then open a Pull Request into `dev` or `main` as the maintainers prefer
+
+For autonomous agents, see **[AGENTS.md](./AGENTS.md)**. For product scope and roadmap, see **[spec.md](./spec.md)**.
 
 ### Development Workflow
 
@@ -453,36 +453,9 @@ npm run lint
 npm run build
 ```
 
-### Ideas for Contributions
+### Roadmap
 
-#### 🎯 High Priority
-
-- [ ] **Save/Load Tracks** — Persist tracks to localStorage or Firestore
-- [ ] **Touch Support** — Mobile-friendly drawing and gestures
-- [ ] **Track Sharing** — Generate shareable URLs for tracks
-
-#### 🚀 Features
-
-- [ ] **Public Track Gallery** — Browse community-created tracks
-- [ ] **Line Snapping** — Snap endpoints to grid or existing points
-- [ ] **Replay System** — Record and share ride replays
-- [ ] **Leaderboards** — Track completion times
-- [ ] **Custom Rider** — Different rider physics/appearance
-- [ ] **Multi-rider** — Simulate multiple riders simultaneously
-
-#### 🎨 Polish
-
-- [ ] **Sound Effects** — Audio feedback for collisions and speed
-- [ ] **Dark Mode** — System-aware theme switching
-- [ ] **Themes** — Custom color schemes for lines and UI
-- [ ] **Animations** — UI micro-interactions and transitions
-
-#### 🔧 Technical
-
-- [ ] **Performance** — WebGL renderer for large tracks
-- [ ] **Testing** — Unit tests for physics engine
-- [ ] **PWA** — Offline support and installability
-- [ ] **Accessibility** — Keyboard-only navigation, screen reader support
+Product milestones and acceptance criteria live in **[spec.md](./spec.md)**.
 
 ---
 
@@ -494,6 +467,7 @@ npm run build
 | `npm run build` | Create optimized production build        |
 | `npm run start` | Start production server                  |
 | `npm run lint`  | Run ESLint for code quality              |
+| `npm run type-check` | TypeScript check without emit       |
 
 ---
 

@@ -1,214 +1,355 @@
-# spec.md — Improvement Spec for Ride.me
+# spec.md — Ride.me Product Specification
 
-Based on `competitor-analysis.md` (target) and `CLAUDE.md` (current state).
-
----
-
-## 1. Table Stakes Gaps
-
-These are features Line Rider has that we're missing. Without them, we can't be taken seriously as a competitor.
-
-### 1.1 Straight Line Tool
-
-**We have:** Freehand pencil only.
-**They have:** Both freehand pencil (Q) and straight line tool (W).
-**What to build:**
-
-- Add a `"line"` tool mode alongside `"draw"`, `"pan"`, `"erase"`.
-- Click to set start point, see a preview line as you move the mouse, click again (or release) to place the line.
-- The line becomes a single segment of the current `lineType`.
-- Keyboard shortcut: `L` to activate line tool.
-- Show a crosshair cursor when active.
-- Hold Shift while placing to snap to 15° angle increments (0°, 15°, 30°, 45°, etc.) for precise slopes.
-- The line tool should push history just like the pencil tool (one undo = one line).
-
-### 1.2 Resume from Pause (Don't Restart)
-
-**We have:** Play always resets rider to start position and begins from frame 0.
-**They have:** Play resumes from the current paused state. A separate "stop" resets to beginning.
-
-**What to build:**
-
-- **Play** resumes the rider from wherever it currently is (if paused mid-ride, it continues).
-- **Stop** resets the rider to start position and frame 0.
-- The current play/pause button becomes play/pause (Space). Add a separate **Stop** button (square icon, shortcut `S` or `Escape`).
-- When stopped (rider at start): Play starts simulation from beginning.
-- When paused (rider mid-ride): Play continues simulation from current position.
-- When playing: the button shows Pause. Clicking it pauses (freezes rider in place).
-- `togglePlaying` in the store needs to differentiate between "paused mid-ride" and "stopped at start."
-
-### 1.3 Flag / Marker System
-
-**We have:** Nothing.
-**They have:** Flag (I key) marks a frame on the timeline. F jumps to that flag. Flag can be dragged on timeline.
-
-**What to build:**
-
-- User can set a **flag** at any point during playback or while paused mid-ride by pressing `I`. This records the current rider state and frame number.
-- Pressing `F` when a flag exists: resets the rider to the flagged state (position, velocity, frame) and pauses. The next Play continues from the flag.
-- If no flag is set, `F` still toggles camera follow (move this to `Shift+F` or remove conflict — see below).
-- Visual indicator: small flag icon in the HUD showing the flagged frame number. If no flag, show nothing.
-- `clearFlag` action to remove the flag (e.g., when track changes or user clears it).
-- **Keyboard conflict resolution:** Currently `F` = toggle camera follow. Change camera follow to `Shift+F`. `F` = jump to flag (matches Line Rider). `I` = set flag.
-
-### 1.4 Redo
-
-**We have:** Undo only (⌘Z). No redo.
-**They have:** Full undo/redo.
-
-**What to build:**
-
-- Add `redoHistory: Segment[][]` stack alongside the existing `history` stack.
-- On undo: push current segments to redo stack.
-- On redo: pop from redo stack, push current to history.
-- Clear redo stack on any new track modification (draw, erase, clear).
-- Keyboard shortcut: `⌘Shift+Z` / `Ctrl+Shift+Z` for redo.
-- Add redo button in the toolbar next to undo.
-
-### 1.5 Save & Load Tracks
-
-**We have:** Tracks are ephemeral — lost on refresh. Firestore rules exist but no code.
-**They have:** Local save/load with file formats. URL-based track sharing.
-
-**What to build:**
-
-#### 1.5a Local File Save/Load (no auth required)
-- **Save to file:** Export current track as a `.json` file download. Contains: segments array, rider start position, metadata (name, date, character).
-- **Load from file:** Import a `.json` file to replace the current track. Validate the schema before loading.
-- File menu or buttons in toolbar: "Save" (download icon) and "Load" (upload icon).
-- Keyboard: `⌘S` / `Ctrl+S` = save to file. `⌘O` / `Ctrl+O` = load from file.
-
-#### 1.5b Cloud Save (auth required)
-- Authenticated users can save tracks to Firestore at `/users/{uid}/tracks/{trackId}`.
-- Track document: `{ name, segments, riderStart, character, lineCount, createdAt, updatedAt }`.
-- "My Tracks" panel (slide-out or modal) lists saved tracks with name, line count, and date.
-- Click a track to load it. Confirm if current track has unsaved changes.
-- Save button: if track was loaded from cloud, updates it. If new, prompts for a name.
-- Maximum 50 tracks per user (enforce in rules or code).
-- Segments stored as a compact array: `[[ax, ay, bx, by, typeIndex], ...]` to minimize Firestore document size.
-
-### 1.6 Tab Overview
-
-**We have:** Nothing.
-**They have:** Press Tab to zoom out and see the full track, then zoom back.
-
-**What to build:**
-
-- Press `Tab`: animate camera to show entire track bounding box (fit all segments in view with padding).
-- Release `Tab` (or press again): animate camera back to previous position/zoom.
-- During overview: don't allow drawing or erasing. Pan only.
-- Implementation: calculate bounding box of all segments, compute zoom level to fit viewport, lerp camera to that state.
+Authoritative product, architecture, and roadmap document for Ride.me.  
+Agent implementation rules: **AGENTS.md**. User-facing setup: **README.md**.
 
 ---
 
-## 2. Improvement Opportunities
+## 1. Product overview
 
-Things we both have, but they do better.
+### Product promise
 
-### 2.1 Better Eraser
+Draw tracks in the browser, press play, and watch your rider follow the lines with believable physics—like the classic Line Rider, free and open source, with optional sign-in to save identity (character, display name) and a planned path to saved and shared tracks.
 
-**We have:** Fixed radius eraser that deletes whole segments on contact.
-**They have:** Larger eraser with better hitbox, undo applies to whole erase strokes.
+### Target users
 
-**What to build:**
+| Segment | Need |
+|---------|------|
+| Casual players | Quick doodles, immediate play, no account |
+| Nostalgia / Line Rider fans | Familiar line types, shortcuts, physics feel |
+| Track builders | Precise geometry, iteration on sections, persistence (gap today) |
+| Signed-in users | Profile, character, future cloud tracks |
 
-- Currently each erase during drag is a separate history entry. Change to: push history once on erase-start, batch all erasures in a single drag into one undo step.
-- Show erase radius as a visual circle around the cursor.
-- Scale erase radius with a modifier: hold Shift while erasing for 3× larger radius.
+### Core workflows (today)
 
-### 2.2 Temporary Hand Tool
+1. **Create** — Open `/`, draw with pencil, switch line types, pan/zoom, set start with Shift+click.
+2. **Test** — Space to play/pause; adjust speed; optional camera follow.
+3. **Refine** — Undo, erase, clear; repeat until satisfied (work is lost on refresh).
+4. **Optional identity** — Sign in (if Firebase configured), pick character, edit profile.
 
-**We have:** Must switch to pan tool to pan.
-**They have:** Hold Space to temporarily activate hand tool, release to return to previous tool.
+### Product goals
 
-**What to build:**
-
-- While Space is held (keydown without keyup), temporarily switch to pan mode.
-- On Space keyup, restore previous tool.
-- Don't trigger play/pause on Space if it was held for pan (only toggle play on quick press).
-- Implementation: track `spaceHeld` state. On keydown: if not already held, start pan. On keyup: if was held for > 200ms, restore tool (don't toggle play). If quick press (< 200ms), toggle play.
-
-### 2.3 Snap to Previous Line Endpoint
-
-**We have:** Freehand drawing starts wherever you click.
-**They have:** Line snapping.
-
-**What to build:**
-
-- When starting a new line (line tool or pencil), if the cursor is within 10px (screen) of an existing segment endpoint, snap to that endpoint.
-- Visual feedback: highlight the snap target with a small circle.
-- This enables clean connections between lines without gaps.
-- Only snap to endpoints, not midpoints (keeps it simple).
+1. **Parity** with Line Rider table-stakes editor and playback (see roadmap).
+2. **Persistence** — Never lose work: local files first, then cloud for signed-in users.
+3. **Sharing** — One-link playback and optional fork (differentiator vs linerider.com).
+4. **Polish** — Modern responsive UI, accurate help text, mobile-friendly input (later).
 
 ---
 
-## 3. Differentiators
+## 2. Current application state
 
-Things we can do that Line Rider doesn't, or ways to be meaningfully better.
+*Verified by code review (May 2026). Items marked **(inferred)** are not backed by automated tests.*
 
-### 3.1 Shareable Track URLs
+### What the app does
 
-**They have:** Share via hosted .track.json files with `?track=` URL param. Requires external hosting.
-**We can do better:**
+Single-route canvas game (`LineriderApp`) filling the viewport. No separate landing page. Legal content at `/privacy` and `/terms`.
 
-- Every saved cloud track gets a shareable URL: `ride.me/t/{trackId}`.
-- Visiting the URL loads the track in read-only playback mode. Viewer can press Play to watch.
-- "Fork" button: copies the track to the viewer's account for editing (requires auth).
-- Share button on the toolbar generates and copies the URL.
-- No Firestore rules change needed for public read — add a `public` flag to track documents and a top-level `/tracks/{trackId}` collection with public read access.
+### Feature inventory
 
-### 3.2 Track Gallery / Browse
+| Area | Status | Notes |
+|------|--------|-------|
+| Pencil draw | ✅ | `ToolMode: draw`, min 3px segment spacing |
+| Straight line tool | ❌ | Only freehand |
+| Pan | ✅ | Tool + middle/right drag |
+| Eraser | ✅ | `erasePath`, radius scaled by zoom |
+| Line types normal/accel/scenery | ✅ | Keys 1/2/3 |
+| Play / pause | ✅ | Space; **resumes** mid-ride |
+| Stop (reset to start) | ⚠️ Partial | `resetRider()` unused in UI; `R` resets camera + rider |
+| Playback speeds | ✅ | 0.25×–4×, validated |
+| Camera follow | ✅ | `F` |
+| Grid | ✅ | `G` |
+| Zoom | ✅ | Wheel, +/- keys, toolbar |
+| Undo | ✅ | Max 200 steps |
+| Redo | ❌ | |
+| Flags / timeline | ❌ | |
+| Tab overview | ❌ | |
+| Track save/load | ❌ | Ephemeral in memory |
+| Track sharing | ❌ | |
+| Characters (4) | ✅ | Animated rendering |
+| Auth Google / email / link | ✅ | Optional via env |
+| User profile Firestore | ✅ | `/users/{uid}` |
+| Cloud tracks | ❌ | Rules only at `/users/{uid}/tracks/{id}` |
+| Tests | ❌ | No runner configured |
+| API routes / Server Actions | ❌ | |
+| Middleware / route guards | ❌ | |
 
-**They have:** Nothing built-in. Community uses forums.
-**We can do:**
+### User flows
 
-- `/browse` page showing recently published public tracks.
-- Grid of track cards with: name, author, line count, preview thumbnail (if available), play count.
-- Click a card to open the track in play mode.
-- Simple Firestore query: `tracks` collection, ordered by `createdAt desc`, paginated.
-- No complex recommendation or search — just recent public tracks.
+**Anonymous play**
 
-### 3.3 Onboarding / Example Track
+1. Load `/` → canvas ready, default rider start near origin.
+2. Draw → segments append to Zustand store, spatial hash invalidated on version bump.
+3. Play → physics loop in canvas; HUD shows time and speed; OOB auto-pauses.
+4. Refresh → **all track data lost**.
 
-**They have:** Blank canvas, no guidance.
-**We can do:**
+**Signed-in (Firebase configured)**
 
-- For first-time visitors (no saved state), load a simple pre-built demo track that showcases the three line types.
-- Small banner: "This is a demo track. Press Play to watch, or Clear to start fresh."
-- The demo track should be 10-15 lines: a small hill, an acceleration boost, and some scenery decoration. Simple enough to understand the mechanics in 5 seconds.
+1. Sign In → auth modal → profile created/merged in Firestore.
+2. Character from profile applied to game store via `LineriderApp` effect.
+3. Profile modal → update display name / character.
+4. Tracks still **not** saved to Firestore.
+
+### Integrations
+
+| Integration | Usage |
+|-------------|--------|
+| Firebase Auth | Google, email/password, email link |
+| Firestore | User profiles only (client SDK) |
+| Firebase Storage | Rules exist; **no app code** |
+| Vercel | Hosting **(inferred from README/domain)** |
+
+### Architecture summary
+
+- **Next.js 16** App Router: mostly client components for the game.
+- **Zustand** stores: `linerider-store` (game), `auth-store` (session).
+- **Canvas 2D** render loop with Path2D caching per `trackVersion`.
+- **Physics:** Verlet integration, `PHYSICS_DT`, spatial hash (`SPATIAL_CELL_SIZE` 200), constants in `src/lib/linerider/constants.ts`.
+- **Firebase:** Lazy init in `config.ts`; `isFirebaseConfigured()` guards all paths.
+
+### Technical constraints
+
+- Client-only Firebase (public config vars).
+- Firestore track documents limited by rules (name required; owner-only read/write).
+- AGPL-3.0 license.
+- No server-side track validation or thumbnails yet.
+- Canvas performance tied to segment count **(inferred)**.
+
+### Known limitations
+
+1. **No track persistence** — largest product gap.
+2. **No straight-line tool** — precise geometry is painful.
+3. **No explicit Stop control** — pause vs restart is confusing; `resetRider` not in toolbar.
+4. **No redo, flags, scrubbing, tab overview.**
+5. **No select/move/copy** — erase and redraw only.
+6. **No sharing or gallery.**
+7. **No touch-optimized gestures** — mouse/keyboard first.
+8. **No automated tests.**
+9. **Help panel incomplete** — omits `C`, full zoom keys, pause/resume nuance.
+10. **Auth UI hidden** when Firebase env missing (by design).
+
+### Partially implemented / abandoned
+
+| Item | State |
+|------|--------|
+| `resetRider` action | Implemented in store, **not wired** to controls |
+| `/users/{uid}/tracks` | Firestore rules only |
+| `storage.rules` | Avatars/thumbnails planned, unused |
+| Multi-point / Bosh rider physics | `createRider` removed; ball-only simulation |
+
+### Doc drift corrected (was wrong in older docs)
+
+- **Play/pause does resume** mid-ride (`togglePlaying` does not reset rider).
+- **Email link** uses `EmailConfirmModal`, not `window.prompt`.
+- **Privacy/terms pages exist** at `/privacy`, `/terms`.
+- **404** includes link home.
+- **Firestore profile validation** exists in `users.ts`; rules use explicit parentheses for email.
 
 ---
 
-## 4. Not Doing
+## 3. Product roadmap
 
-Things Line Rider has that we're intentionally skipping.
+Ordered for product impact and dependencies. Each item is sized for **one focused commit sequence** on `dev`. Acceptance criteria are testable by hand.
 
-| Feature | Why we're skipping it |
-|---------|----------------------|
-| **Select / move / scale / rotate tool** | Complex to build well (box selection, transform handles, copy/paste buffer). Adds significant code. Ship without it — users can erase and redraw. Revisit later if users request it. |
-| **Per-frame camera state** | Only useful for cinematic animation — a power-user feature. Our camera follow already handles normal use cases. |
-| **Transparent frame overlay** | Animation-specific feature for syncing line art to frames. Not relevant for most users. |
-| **Key rebinding** | Nice-to-have but not competitive. Our defaults match Line Rider conventions. |
-| **Multi-rider support** | Line Rider 2 feature, not in the web version. Not table stakes. |
-| **Video/GIF export** | Desirable but complex (Canvas recording API, encoding). Defer to a future iteration. |
-| **Desktop app / offline** | We're web-first. PWA could come later. |
-| **Slow-motion toggle (M key)** | Our speed control already covers 0.25× which is slow-mo. No need for a separate toggle. |
-| **Track file format compatibility (.trk)** | Our JSON format is simpler and web-native. No need to support legacy formats. |
+### Milestone 1 — Redo
+
+**User value:** Recover from accidental undo without redrawing.
+
+**Intent:** Add `redoStack` in `linerider-store`; clear on new edits; `⌘⇧Z` / toolbar button.
+
+**Acceptance criteria:**
+
+- [ ] After undo, redo restores previous segments.
+- [ ] New draw/erase/clear clears redo stack.
+- [ ] Toolbar redo disabled when stack empty.
 
 ---
 
-## Implementation Priority
+### Milestone 2 — Straight line tool
 
-The spec items above should be implemented in this order:
+**User value:** Precise ramps and structures (table stakes vs Line Rider).
 
-1. **Table stakes first** (1.1–1.6): These close the gap with Line Rider's core editor.
-2. **Improvements** (2.1–2.3): These polish the experience above Line Rider's level.
-3. **Differentiators** (3.1–3.3): These give users a reason to choose us over Line Rider.
+**Intent:** `ToolMode: "line"`; click–click placement; preview segment; `L` shortcut; Shift snaps to 15°; one undo step per line.
 
-Within table stakes, the order is:
-1. 1.4 Redo (small change, big usability win)
-2. 1.1 Straight Line Tool (core drawing capability)
-3. 1.2 Resume from Pause (core playback fix)
-4. 1.3 Flag / Marker System (depends on 1.2)
-5. 1.6 Tab Overview (small, self-contained)
-6. 1.5 Save & Load (largest feature, most files touched)
+**Acceptance criteria:**
+
+- [ ] `L` activates line tool with distinct cursor.
+- [ ] Two clicks place one segment of active line type.
+- [ ] Shift constrains angle to 15° increments.
+- [ ] Help panel documents line tool.
+
+---
+
+### Milestone 3 — Stop vs play/pause
+
+**User value:** Clear mental model: pause to inspect, stop to rerun from start.
+
+**Intent:** Keep resume on play; add Stop button (`S` / Escape); wire `resetRider`; separate `resetCamera` from full simulation reset if needed.
+
+**Acceptance criteria:**
+
+- [ ] Pause freezes rider; play continues from same state.
+- [ ] Stop resets rider to `riderStart`, time 0, not playing.
+- [ ] `R` / Home / `0` reset view only (or documented combined behavior).
+
+---
+
+### Milestone 4 — Flag and jump
+
+**User value:** Iterate on one section of a long track (depends on Milestone 3).
+
+**Intent:** Store flag snapshot (rider state + elapsed time); `I` set, `F` jump; move camera follow to `Shift+F`.
+
+**Acceptance criteria:**
+
+- [ ] Flag set while playing or paused.
+- [ ] `F` restores flagged state and pauses.
+- [ ] HUD shows flag indicator when set.
+- [ ] Flag clears on clear track / new start.
+
+---
+
+### Milestone 5 — Tab track overview
+
+**User value:** See full track layout without manual zoom guessing.
+
+**Intent:** Hold Tab (or toggle): fit segment bounding box in viewport; release restores prior camera; disable draw/erase during overview.
+
+**Acceptance criteria:**
+
+- [ ] Tab shows all segments with padding.
+- [ ] Release Tab restores previous camera.
+- [ ] No segment edits during overview.
+
+---
+
+### Milestone 6 — Local save and load (JSON)
+
+**User value:** Keep tracks without an account; backup and share files manually.
+
+**Intent:** Serialize `{ version, name, segments, riderStart, character }`; download/upload `.json`; `⌘S` / `⌘O`; confirm before replace.
+
+**Acceptance criteria:**
+
+- [ ] Save downloads valid JSON reflecting current canvas.
+- [ ] Load replaces track after confirmation.
+- [ ] Invalid files show error, no partial corrupt state.
+- [ ] Works without Firebase.
+
+---
+
+### Milestone 7 — Cloud save and My Tracks
+
+**User value:** Cross-device persistence for signed-in users.
+
+**Intent:** CRUD in `/users/{uid}/tracks/{trackId}`; compact segment encoding; list modal; name prompt on first save; cap 50 tracks **(inferred limit from prior spec)**.
+
+**Acceptance criteria:**
+
+- [ ] Signed-in user saves and reloads track from Firestore.
+- [ ] List shows name, date, line count.
+- [ ] Unsaved canvas prompts before load/replace.
+- [ ] Rules reject invalid payloads.
+
+**Depends on:** Milestone 6 schema.
+
+---
+
+### Milestone 8 — Shareable play-only URL
+
+**User value:** Send a link; recipient watches without setup.
+
+**Intent:** Public read model (e.g. `public: true` + `/tracks/{id}` or slug route); `/t/[id]` play-only view; copy link button; optional fork for authed users.
+
+**Acceptance criteria:**
+
+- [ ] Shared URL loads track read-only.
+- [ ] Play works without sign-in.
+- [ ] Fork copies to owner’s library when signed in.
+
+**Depends on:** Milestone 7.
+
+---
+
+### Milestone 9 — Eraser and draw polish
+
+**User value:** Faster editing, fewer undo steps.
+
+**Intent:** Single undo per erase stroke; optional radius circle; Shift = 3× erase radius; endpoint snap (10px screen) for line/pencil start.
+
+**Acceptance criteria:**
+
+- [ ] One erase drag = one undo.
+- [ ] Snap highlight when near endpoint.
+- [ ] Space-hold temporary pan **(optional sub-item)** with short-press play unchanged.
+
+---
+
+### Milestone 10 — Demo track onboarding
+
+**User value:** First visit shows what’s possible without a blank canvas.
+
+**Intent:** First visit (localStorage flag) loads small bundled demo; dismiss banner; Clear removes demo.
+
+**Acceptance criteria:**
+
+- [ ] New visitor sees demo track once.
+- [ ] Play demonstrates three line types.
+- [ ] Clear returns to empty track.
+
+---
+
+### Milestone 11 — Touch and mobile toolbar
+
+**User value:** Usable on phones and tablets.
+
+**Intent:** Touch draw/pan/pinch zoom; larger hit targets on small breakpoints; test on iOS Safari.
+
+**Acceptance criteria:**
+
+- [ ] Draw and pan work with one finger.
+- [ ] Pinch zooms toward focal point.
+- [ ] Toolbar usable at 375px width.
+
+---
+
+### Milestone 12 — Public browse gallery (optional)
+
+**User value:** Discovery without external forums.
+
+**Intent:** `/browse` lists recent public tracks; card → play view.
+
+**Acceptance criteria:**
+
+- [ ] Page lists paginated public tracks.
+- [ ] Click opens play-only experience.
+
+**Depends on:** Milestone 8.
+
+---
+
+## 4. Explicitly not on roadmap (now)
+
+Aligned with prior product strategy—revisit only with strong user demand:
+
+| Feature | Reason |
+|---------|--------|
+| Select / move / scale / rotate | High complexity; erase/redraw suffices initially |
+| Per-frame camera keyframes | Power-user cinematic feature |
+| .trk legacy import | JSON is sufficient |
+| Video/GIF export | Large scope; separate project |
+| Multi-rider | Not table stakes for web clone |
+| Key rebinding | Low impact |
+
+---
+
+## 5. Competitor context
+
+Line Rider (linerider.com) analysis is archived in **competitor-analysis.md** (pointer only). Table-stakes list there informed milestones 2–7 above.
+
+---
+
+## 6. References
+
+- **AGENTS.md** — agent workflow, validation, git rules
+- **README.md** — install, env, controls summary
+- **firestore.rules** / **storage.rules** — security contracts for future features
