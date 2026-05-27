@@ -71,7 +71,7 @@ flowchart LR
 
 Verified in code (not docs):
 
-- **Drawing:** Pencil tool (`draw`), pan (`pan`), eraser (`erase`). Three line types: `normal`, `accel`, `scenery`. Freehand segments with min draw distance; batched erase via `erasePath`.
+- **Drawing:** Pencil (`draw`), straight line (`line`), pan (`pan`), eraser (`erase`). Three line types: `normal`, `accel`, `scenery`. Freehand segments with min draw distance; line tool is click–click with Shift 15° snap; batched erase strokes.
 - **Playback:** Space toggles play/pause. **Pause resumes** from current rider state (does not reset). `resetRider()` exists but is **not** exposed in the toolbar. `R` / Home / `0` call `resetCamera()` (resets camera, rider to start, elapsed time, stops playback).
 - **Physics:** Verlet ball rider, spatial hash collisions, out-of-bounds auto-pause, playback speeds `0.25×–4×` (validated in store).
 - **Camera:** Wheel zoom at cursor, follow toggle (`F`), grid toggle (`G`).
@@ -216,6 +216,7 @@ Stop and report (do not guess) when:
 | Key | Action |
 |-----|--------|
 | D | Draw tool |
+| L | Straight line tool |
 | H / P | Pan tool |
 | E | Erase tool |
 | 1 / 2 / 3 | Line type + draw tool |

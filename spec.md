@@ -49,7 +49,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 | Area | Status | Notes |
 |------|--------|-------|
 | Pencil draw | ✅ | `ToolMode: draw`, min 3px segment spacing |
-| Straight line tool | ❌ | Only freehand |
+| Straight line tool | ✅ | `ToolMode: line`, click–click, Shift 15° snap |
 | Pan | ✅ | Tool + middle/right drag |
 | Eraser | ✅ | `erasePath`, radius scaled by zoom |
 | Line types normal/accel/scenery | ✅ | Keys 1/2/3 |
@@ -117,7 +117,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 ### Known limitations
 
 1. **No track persistence** — largest product gap.
-2. **No straight-line tool** — precise geometry is painful.
+2. ~~**No straight-line tool**~~ — implemented (Milestone 2).
 3. **No explicit Stop control** — pause vs restart is confusing; `resetRider` not in toolbar.
 4. **No flags, scrubbing, or tab overview.**
 5. **No select/move/copy** — erase and redraw only.
@@ -166,7 +166,7 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 
 ---
 
-### Milestone 2 — Straight line tool
+### Milestone 2 — Straight line tool ✅
 
 **User value:** Precise ramps and structures (table stakes vs Line Rider).
 
@@ -174,10 +174,12 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 
 **Acceptance criteria:**
 
-- [ ] `L` activates line tool with distinct cursor.
-- [ ] Two clicks place one segment of active line type.
-- [ ] Shift constrains angle to 15° increments.
-- [ ] Help panel documents line tool.
+- [x] `L` activates line tool with distinct cursor.
+- [x] Two clicks place one segment of active line type.
+- [x] Shift constrains angle to 15° increments.
+- [x] Help panel documents line tool.
+
+**Implementation note (2026-05-26):** `snapLineEndpoint` in `math.ts`; canvas click–click flow with live preview; `addSegment` for one undo step; `Ruler` toolbar button; Escape cancels in-progress line. Tests in `math.test.ts`.
 
 ---
 

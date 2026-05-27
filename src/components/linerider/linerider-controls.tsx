@@ -10,6 +10,7 @@ import { UserMenu } from "@/components/auth";
 import { ZOOM } from "@/lib/linerider/constants";
 import {
   Pencil,
+  Ruler,
   Hand,
   Eraser,
   Play,
@@ -154,6 +155,14 @@ export function LineriderControls() {
         tooltip="Draw (D)"
       >
         <Pencil className="w-5 h-5" />
+      </IconBtn>
+      <IconBtn
+        active={tool === "line"}
+        onClick={() => setTool("line")}
+        tooltip="Straight line (L)"
+        aria-label="Straight line tool"
+      >
+        <Ruler className="w-5 h-5" />
       </IconBtn>
       <IconBtn
         active={tool === "pan"}
@@ -453,12 +462,18 @@ export function LineriderControls() {
                       D
                     </kbd>{" "}
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      L
+                    </kbd>{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       H/P
                     </kbd>{" "}
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       E
                     </kbd>{" "}
                     → tools
+                  </div>
+                  <div className="text-slate-500">
+                    Line tool: click start, click end; hold Shift to snap 15°
                   </div>
                   <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">

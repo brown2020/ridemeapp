@@ -23,7 +23,7 @@ import {
 } from "@/lib/linerider/constants";
 import type { CharacterType } from "@/lib/linerider/characters";
 
-export type ToolMode = "draw" | "pan" | "erase";
+export type ToolMode = "draw" | "line" | "pan" | "erase";
 
 export type LineriderSettings = Readonly<{
   isGridVisible: boolean;

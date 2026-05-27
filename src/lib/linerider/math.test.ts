@@ -3,6 +3,7 @@ import {
   closestPointOnSegment,
   distPointToSegment,
   clamp,
+  snapLineEndpoint,
   v,
 } from "./math";
 
@@ -39,5 +40,28 @@ describe("clamp", () => {
     expect(clamp(5, 0, 10)).toBe(5);
     expect(clamp(-1, 0, 10)).toBe(0);
     expect(clamp(11, 0, 10)).toBe(10);
+  });
+});
+
+describe("snapLineEndpoint", () => {
+  it("returns end unchanged when snap is disabled", () => {
+    const end = v(10, 5);
+    expect(snapLineEndpoint(v(0, 0), end, false)).toEqual(end);
+  });
+
+  it("snaps to horizontal when shift snapping near 0°", () => {
+    const end = v(100, 5);
+    const snapped = snapLineEndpoint(v(0, 0), end, true);
+    expect(snapped.y).toBeCloseTo(0, 5);
+    expect(Math.hypot(snapped.x, snapped.y)).toBeCloseTo(
+      Math.hypot(end.x, end.y),
+      5
+    );
+  });
+
+  it("snaps to 45° for diagonal input", () => {
+    const snapped = snapLineEndpoint(v(0, 0), v(100, 95), true);
+    const angle = Math.atan2(snapped.y, snapped.x);
+    expect(angle).toBeCloseTo(Math.PI / 4, 2);
   });
 });

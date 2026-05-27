@@ -72,3 +72,25 @@ export function closestPointOnSegment(
 export function distPointToSegment(p: Vec2, a: Vec2, b: Vec2): number {
   return Math.sqrt(closestPointOnSegment(p, a, b).dist2);
 }
+
+const LINE_ANGLE_SNAP_STEP_DEG = 15;
+
+/** Snap line end to 15° increments from start when snapToAngle is true. */
+export function snapLineEndpoint(
+  start: Vec2,
+  end: Vec2,
+  snapToAngle: boolean
+): Vec2 {
+  if (!snapToAngle) return end;
+
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 1e-9) return end;
+
+  const stepRad = (LINE_ANGLE_SNAP_STEP_DEG * Math.PI) / 180;
+  const angle = Math.atan2(dy, dx);
+  const snapped = Math.round(angle / stepRad) * stepRad;
+
+  return v(start.x + Math.cos(snapped) * dist, start.y + Math.sin(snapped) * dist);
+}

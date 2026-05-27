@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLineriderStore, getRiderVelocity } from "@/stores/linerider-store";
 import type { Viewport } from "@/lib/linerider/types";
-import { sub, len, v, type Vec2 } from "@/lib/linerider/math";
+import { sub, len, v, snapLineEndpoint, type Vec2 } from "@/lib/linerider/math";
 import { screenToWorld } from "@/lib/linerider/transform";
 import {
   drawGrid,
@@ -15,9 +15,10 @@ import {
 import { drawCharacter } from "@/lib/linerider/characters";
 import { PHYSICS_DT } from "@/lib/linerider/constants";
 
-type PointerMode = "draw" | "pan" | "erase" | null;
+type PointerMode = "draw" | "line" | "pan" | "erase" | null;
 
 const MIN_DRAW_DIST_PX = 3;
+const MIN_LINE_LENGTH_WORLD = 0.5;
 
 /** Helper to get screen position from pointer event */
 function screenFromEvent(e: PointerEvent, el: HTMLCanvasElement): Vec2 {
@@ -35,6 +36,8 @@ export function LineriderCanvas() {
   const lastScreenRef = useRef<Vec2>(v(0, 0));
   const lastWorldRef = useRef<Vec2>(v(0, 0));
   const strokeSegmentsRef = useRef<Array<Readonly<{ a: Vec2; b: Vec2 }>>>([]);
+  const lineStartRef = useRef<Vec2 | null>(null);
+  const linePlacingRef = useRef<boolean>(false);
   const isInteractingRef = useRef<boolean>(false);
 
   // Animation state
@@ -143,8 +146,8 @@ export function LineriderCanvas() {
       // Get fresh state for rendering (may have changed during physics)
       state = useLineriderStore.getState();
 
-      // Always render when interacting (to show drawing in progress)
-      if (isInteractingRef.current) {
+      // Always render when interacting or placing a straight line preview
+      if (isInteractingRef.current || linePlacingRef.current) {
         needsRenderRef.current = true;
       }
 
@@ -208,9 +211,21 @@ export function LineriderCanvas() {
 
       // Continue animation loop if playing or interacting
       const freshState = useLineriderStore.getState();
-      if (freshState.isPlaying || isInteractingRef.current) {
+      if (
+        freshState.isPlaying ||
+        isInteractingRef.current ||
+        linePlacingRef.current
+      ) {
         rafRef.current = requestAnimationFrame(renderLoop);
       }
+    }
+
+    function cancelLinePlacement() {
+      linePlacingRef.current = false;
+      lineStartRef.current = null;
+      strokeSegmentsRef.current = [];
+      isInteractingRef.current = false;
+      requestRender();
     }
 
     function requestRender() {
@@ -250,6 +265,21 @@ export function LineriderCanvas() {
       const isPanButton = e.button === 1 || e.button === 2;
       if (isPanButton || state.tool === "pan") {
         pointerModeRef.current = "pan";
+      } else if (state.tool === "line") {
+        pointerModeRef.current = "line";
+        const start = lineStartRef.current;
+        if (linePlacingRef.current && start) {
+          const end = snapLineEndpoint(start, world, e.shiftKey);
+          if (len(sub(end, start)) >= MIN_LINE_LENGTH_WORLD) {
+            state.addSegment(start, end);
+          }
+          cancelLinePlacement();
+        } else {
+          lineStartRef.current = world;
+          linePlacingRef.current = true;
+          isInteractingRef.current = true;
+          strokeSegmentsRef.current = [{ a: world, b: world }];
+        }
       } else if (state.tool === "draw") {
         pointerModeRef.current = "draw";
         strokeSegmentsRef.current = [];
@@ -264,8 +294,25 @@ export function LineriderCanvas() {
     }
 
     function onPointerMove(e: PointerEvent) {
-      if (pointerIdRef.current !== e.pointerId) return;
       const mode = pointerModeRef.current;
+
+      // Line preview continues after first click release (no pointer capture)
+      if (mode === "line" && linePlacingRef.current) {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const viewport = viewportRef.current;
+        const state = useLineriderStore.getState();
+        const screen = screenFromEvent(e, canvas);
+        const world = screenToWorld(screen, state.camera, viewport);
+        const start = lineStartRef.current;
+        if (!start) return;
+        const end = snapLineEndpoint(start, world, e.shiftKey);
+        strokeSegmentsRef.current = [{ a: start, b: end }];
+        requestRender();
+        return;
+      }
+
+      if (pointerIdRef.current !== e.pointerId) return;
       if (!mode) return;
 
       const canvas = canvasRef.current;
@@ -305,9 +352,24 @@ export function LineriderCanvas() {
 
     function onPointerUp(e: PointerEvent) {
       if (pointerIdRef.current !== e.pointerId) return;
-      pointerIdRef.current = null;
 
       const canvas = canvasRef.current;
+      const mode = pointerModeRef.current;
+
+      if (mode === "line" && linePlacingRef.current) {
+        if (canvas) {
+          try {
+            canvas.releasePointerCapture(e.pointerId);
+          } catch {
+            // Ignore if not captured
+          }
+        }
+        requestRender();
+        return;
+      }
+
+      pointerIdRef.current = null;
+
       if (canvas) {
         try {
           canvas.releasePointerCapture(e.pointerId);
@@ -317,7 +379,6 @@ export function LineriderCanvas() {
       }
 
       const state = useLineriderStore.getState();
-      const mode = pointerModeRef.current;
 
       if (mode === "draw") {
         const stroke = strokeSegmentsRef.current;
@@ -326,11 +387,21 @@ export function LineriderCanvas() {
           state.addSegments(stroke);
         }
       }
+      // Line tool commits on second click (pointer down), not pointer up
       // Erase mode: already handled in real-time during drag
 
-      pointerModeRef.current = null;
-      isInteractingRef.current = false;
+      if (mode !== "line" || !linePlacingRef.current) {
+        pointerModeRef.current = null;
+        isInteractingRef.current = false;
+      }
       requestRender();
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && linePlacingRef.current) {
+        e.preventDefault();
+        cancelLinePlacement();
+      }
     }
 
     function onWheel(e: WheelEvent) {
@@ -345,6 +416,15 @@ export function LineriderCanvas() {
       const zoomFactor = Math.exp(-e.deltaY * 0.001);
       useLineriderStore.getState().zoomAt(cursor, viewport, zoomFactor);
     }
+
+    const unsubscribeTool = useLineriderStore.subscribe(
+      (s) => s.tool,
+      (tool) => {
+        if (tool !== "line" && linePlacingRef.current) {
+          cancelLinePlacement();
+        }
+      }
+    );
 
     // Subscribe to store changes
     const unsubscribe = useLineriderStore.subscribe(
@@ -370,13 +450,16 @@ export function LineriderCanvas() {
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
     el.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("keydown", onKeyDown);
 
     // Initial render
     requestRender();
 
     return () => {
       mounted = false;
+      unsubscribeTool();
       unsubscribe();
+      window.removeEventListener("keydown", onKeyDown);
       el.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
@@ -396,6 +479,7 @@ export function LineriderCanvas() {
 
   const getCursorClass = () => {
     if (tool === "pan") return "cursor-grab active:cursor-grabbing";
+    if (tool === "line") return "cursor-crosshair";
     // erase + draw use inline SVG cursors
     if (tool === "erase" || tool === "draw") return "";
     return "cursor-crosshair";

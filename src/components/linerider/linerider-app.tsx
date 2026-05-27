@@ -85,6 +85,7 @@ export function LineriderApp() {
 
       // Tools
       if (key === "d") setTool("draw");
+      if (key === "l") setTool("line");
       if (key === "h" || key === "p") setTool("pan");
       if (key === "e") setTool("erase");
 
