@@ -62,7 +62,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 | Undo | ✅ | Max 200 steps |
 | Redo | ✅ | Max 200 steps; ⌘⇧Z / toolbar |
 | Flags / timeline | ⚠️ Partial | Set/jump flag (`I`/`F`); no scrubbing yet |
-| Tab overview | ❌ | |
+| Tab overview | ✅ | Hold Tab; pan only; release restores camera |
 | Track save/load | ❌ | Ephemeral in memory |
 | Track sharing | ❌ | |
 | Characters (4) | ✅ | Animated rendering |
@@ -119,7 +119,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 1. **No track persistence** — largest product gap.
 2. ~~**No straight-line tool**~~ — implemented (Milestone 2).
 3. ~~**No explicit Stop control**~~ — implemented (Milestone 3).
-4. **No timeline scrubbing or tab overview.**
+4. **No timeline scrubbing.**
 5. **No select/move/copy** — erase and redraw only.
 6. **No sharing or gallery.**
 7. **No touch-optimized gestures** — mouse/keyboard first.
@@ -224,9 +224,11 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 
 **Acceptance criteria:**
 
-- [ ] Tab shows all segments with padding.
-- [ ] Release Tab restores previous camera.
-- [ ] No segment edits during overview.
+- [x] Tab shows all segments with padding.
+- [x] Release Tab restores previous camera.
+- [x] No segment edits during overview.
+
+**Implementation note:** `computeTrackOverviewCamera` in `src/lib/linerider/track-bounds.ts`; hold Tab on canvas (`linerider-canvas.tsx`) fits bounds with padding, pauses playback, restores saved camera on keyup/blur; pointer input is pan-only while overview is active.
 
 ---
 

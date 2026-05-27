@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLineriderStore, getRiderVelocity } from "@/stores/linerider-store";
 import type { Viewport } from "@/lib/linerider/types";
 import { sub, len, v, snapLineEndpoint, type Vec2 } from "@/lib/linerider/math";
 import { screenToWorld } from "@/lib/linerider/transform";
+import { computeTrackOverviewCamera } from "@/lib/linerider/track-bounds";
+import type { Camera } from "@/lib/linerider/types";
 import {
   drawGrid,
   drawSegments,
@@ -49,6 +51,11 @@ export function LineriderCanvas() {
   const segmentPathsRef = useRef<Map<string, Path2D> | null>(null);
   const segmentPathsVersionRef = useRef<number>(-1);
   const needsRenderRef = useRef<boolean>(true);
+  const overviewActiveRef = useRef<boolean>(false);
+  const savedCameraRef = useRef<Camera | null>(null);
+  const [isTrackOverview, setIsTrackOverview] = useState(false);
+  const setTrackOverviewUiRef = useRef(setIsTrackOverview);
+  setTrackOverviewUiRef.current = setIsTrackOverview;
 
   const tool = useLineriderStore((s) => s.tool);
 
@@ -235,6 +242,53 @@ export function LineriderCanvas() {
       requestRender();
     }
 
+    function isEditableTarget(target: EventTarget | null): boolean {
+      return (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        (target instanceof HTMLElement && target.isContentEditable)
+      );
+    }
+
+    function enterTrackOverview() {
+      if (overviewActiveRef.current) return;
+
+      const state = useLineriderStore.getState();
+      if (state.isPlaying) {
+        state.setPlaying(false);
+      }
+      cancelLinePlacement();
+
+      savedCameraRef.current = {
+        pos: { ...state.camera.pos },
+        zoom: state.camera.zoom,
+      };
+
+      const overview = computeTrackOverviewCamera(
+        state.segments,
+        state.riderStart,
+        viewportRef.current
+      );
+      state.setCamera(overview);
+      overviewActiveRef.current = true;
+      setTrackOverviewUiRef.current(true);
+      requestRender();
+    }
+
+    function exitTrackOverview() {
+      if (!overviewActiveRef.current) return;
+
+      const saved = savedCameraRef.current;
+      if (saved) {
+        useLineriderStore.getState().setCamera(saved);
+      }
+      savedCameraRef.current = null;
+      overviewActiveRef.current = false;
+      setTrackOverviewUiRef.current(false);
+      requestRender();
+    }
+
     function requestRender() {
       needsRenderRef.current = true;
       // Start animation loop if not already running
@@ -255,6 +309,17 @@ export function LineriderCanvas() {
 
       const screen = screenFromEvent(e, canvas);
       const world = screenToWorld(screen, state.camera, viewport);
+
+      if (overviewActiveRef.current) {
+        canvas.setPointerCapture(e.pointerId);
+        pointerIdRef.current = e.pointerId;
+        isInteractingRef.current = true;
+        lastScreenRef.current = screen;
+        lastWorldRef.current = world;
+        pointerModeRef.current = "pan";
+        requestRender();
+        return;
+      }
 
       // Shift+click sets rider start position
       if (e.shiftKey) {
@@ -405,6 +470,14 @@ export function LineriderCanvas() {
     }
 
     function onKeyDown(e: KeyboardEvent) {
+      if (isEditableTarget(e.target)) return;
+
+      if (e.key === "Tab") {
+        e.preventDefault();
+        enterTrackOverview();
+        return;
+      }
+
       if (e.key === "Escape" && linePlacingRef.current) {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -412,7 +485,21 @@ export function LineriderCanvas() {
       }
     }
 
+    function onKeyUp(e: KeyboardEvent) {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        exitTrackOverview();
+      }
+    }
+
+    function onWindowBlur() {
+      if (overviewActiveRef.current) {
+        exitTrackOverview();
+      }
+    }
+
     function onWheel(e: WheelEvent) {
+      if (overviewActiveRef.current) return;
       e.preventDefault();
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -460,6 +547,8 @@ export function LineriderCanvas() {
     window.addEventListener("pointercancel", onPointerUp);
     el.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", onWindowBlur);
 
     // Initial render
     requestRender();
@@ -469,6 +558,11 @@ export function LineriderCanvas() {
       unsubscribeTool();
       unsubscribe();
       window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", onWindowBlur);
+      if (overviewActiveRef.current) {
+        exitTrackOverview();
+      }
       el.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
@@ -487,6 +581,7 @@ export function LineriderCanvas() {
   const pencilCursor = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='%23fff' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z'/%3E%3Cpath d='m15 5 4 4'/%3E%3C/svg%3E") 2 22, auto`;
 
   const getCursorClass = () => {
+    if (isTrackOverview) return "cursor-grab active:cursor-grabbing";
     if (tool === "pan") return "cursor-grab active:cursor-grabbing";
     if (tool === "line") return "cursor-crosshair";
     // erase + draw use inline SVG cursors

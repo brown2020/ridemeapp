@@ -225,6 +225,7 @@ Storage:
 | `2`          | Acceleration line (red) |
 | `3`          | Scenery line (green)    |
 | `Space`      | Play / Pause            |
+| Hold `Tab`   | Fit full track overview (release to restore view) |
 | `R` / Home / `0` | Reset camera and rider to start |
 | `G`          | Toggle grid visibility  |
 | `F`          | Toggle camera follow    |

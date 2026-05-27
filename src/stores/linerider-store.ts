@@ -80,6 +80,7 @@ type LineriderActions = Readonly<{
   panByScreenDelta: (deltaScreen: Vec2) => void;
   zoomAt: (cursorScreen: Vec2, viewport: Viewport, zoomFactor: number) => void;
   setCameraPos: (pos: Vec2) => void;
+  setCamera: (camera: Camera) => void;
 
   togglePlaying: () => void;
   setPlaying: (isPlaying: boolean) => void;
@@ -295,6 +296,8 @@ export const useLineriderStore = create<LineriderStore>()(
       }),
 
     setCameraPos: (pos) => set((s) => ({ camera: { ...s.camera, pos } })),
+
+    setCamera: (camera) => set({ camera }),
 
     togglePlaying: () => {
       const s = get();

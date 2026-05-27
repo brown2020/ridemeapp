@@ -529,6 +529,13 @@ export function LineriderControls() {
                     → follow rider
                   </div>
                   <div>
+                    Hold{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      Tab
+                    </kbd>{" "}
+                    → fit full track (pan only)
+                  </div>
+                  <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       R/Home/0
                     </kbd>{" "}
