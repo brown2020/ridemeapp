@@ -15,6 +15,7 @@ import {
   Eraser,
   Play,
   Pause,
+  Square,
   Grid3X3,
   Focus,
   Home,
@@ -110,6 +111,7 @@ export function LineriderControls() {
     setLineType,
     isPlaying,
     togglePlaying,
+    stop,
     undo,
     redo,
     canRedo,
@@ -130,6 +132,7 @@ export function LineriderControls() {
       setLineType: s.setLineType,
       isPlaying: s.isPlaying,
       togglePlaying: s.togglePlaying,
+      stop: s.stop,
       undo: s.undo,
       redo: s.redo,
       canRedo: s.redoHistory.length > 0,
@@ -213,12 +216,20 @@ export function LineriderControls() {
         variant="primary"
         onClick={togglePlaying}
         tooltip={isPlaying ? "Pause (Space)" : "Play (Space)"}
+        aria-label={isPlaying ? "Pause" : "Play"}
       >
         {isPlaying ? (
           <Pause className="w-5 h-5" />
         ) : (
           <Play className="w-5 h-5" />
         )}
+      </IconBtn>
+      <IconBtn
+        onClick={stop}
+        tooltip="Stop (S)"
+        aria-label="Stop and reset rider to start"
+      >
+        <Square className="w-5 h-5" />
       </IconBtn>
       <div className="flex items-center space-x-1 bg-slate-50 rounded-lg p-0.5">
         <IconBtn
@@ -282,7 +293,7 @@ export function LineriderControls() {
       >
         <Focus className="w-5 h-5" />
       </IconBtn>
-      <IconBtn onClick={resetCamera} tooltip="Reset view (Home)">
+      <IconBtn onClick={resetCamera} tooltip="Reset view only (R / Home)">
         <Home className="w-5 h-5" />
       </IconBtn>
     </div>
@@ -491,7 +502,11 @@ export function LineriderControls() {
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       Space
                     </kbd>{" "}
-                    → play/pause
+                    → play/pause,{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      S
+                    </kbd>{" "}
+                    / Esc → stop
                   </div>
                   <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
@@ -506,7 +521,7 @@ export function LineriderControls() {
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       R/Home/0
                     </kbd>{" "}
-                    → reset view
+                    → reset view only
                   </div>
                   <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">

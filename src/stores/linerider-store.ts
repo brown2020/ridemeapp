@@ -76,7 +76,8 @@ type LineriderActions = Readonly<{
 
   togglePlaying: () => void;
   setPlaying: (isPlaying: boolean) => void;
-  resetRider: () => void;
+  /** Stop playback and reset rider to start (time 0, not playing) */
+  stop: () => void;
   setRiderStart: (p: Vec2) => void;
 
   /** Step physics simulation forward by dt seconds */
@@ -307,7 +308,7 @@ export const useLineriderStore = create<LineriderStore>()(
 
     setPlaying: (isPlaying) => set({ isPlaying }),
 
-    resetRider: () =>
+    stop: () =>
       set((s) => ({
         isPlaying: false,
         rider: createSimpleRider(s.riderStart),
@@ -417,12 +418,10 @@ export const useLineriderStore = create<LineriderStore>()(
     setCharacter: (character) => set({ character }),
 
     resetCamera: () =>
-      set((s) => ({
+      set({
         camera: DEFAULT_CAMERA,
-        rider: createSimpleRider(s.riderStart),
-        elapsedTime: 0,
         isPlaying: false,
-      })),
+      }),
 
     zoomIn: () =>
       set((s) => ({

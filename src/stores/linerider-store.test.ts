@@ -103,6 +103,55 @@ describe("linerider-store track edits", () => {
     expect(useLineriderStore.getState().redoHistory).toHaveLength(0);
   });
 
+  it("stop resets rider to start without clearing track", () => {
+    useLineriderStore.setState({
+      rider: {
+        ...useLineriderStore.getState().rider,
+        points: [
+          {
+            pos: { x: 50, y: 50 },
+            prevPos: { x: 49, y: 49 },
+            friction: 0.02,
+          },
+        ],
+      },
+      elapsedTime: 12,
+      isPlaying: true,
+    });
+
+    useLineriderStore.getState().stop();
+    const state = useLineriderStore.getState();
+    expect(state.isPlaying).toBe(false);
+    expect(state.elapsedTime).toBe(0);
+    expect(state.segments).toHaveLength(2);
+    expect(state.rider.points[0].pos).toEqual({ x: 0, y: -100 });
+  });
+
+  it("resetCamera resets view only, not rider position", () => {
+    useLineriderStore.setState({
+      camera: { pos: { x: 200, y: 300 }, zoom: 2.5 },
+      rider: {
+        ...useLineriderStore.getState().rider,
+        points: [
+          {
+            pos: { x: 50, y: 50 },
+            prevPos: { x: 49, y: 49 },
+            friction: 0.02,
+          },
+        ],
+      },
+      elapsedTime: 9,
+      isPlaying: true,
+    });
+
+    useLineriderStore.getState().resetCamera();
+    const state = useLineriderStore.getState();
+    expect(state.camera).toEqual({ pos: { x: 0, y: -50 }, zoom: 1.5 });
+    expect(state.isPlaying).toBe(false);
+    expect(state.elapsedTime).toBe(9);
+    expect(state.rider.points[0].pos).toEqual({ x: 50, y: 50 });
+  });
+
   it("batches erase stroke into one history entry", () => {
     useLineriderStore.getState().pushHistory();
     useLineriderStore.getState().eraseAt(v(5, 0), 2, { recordHistory: false });

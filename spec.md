@@ -54,7 +54,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 | Eraser | ✅ | `erasePath`, radius scaled by zoom |
 | Line types normal/accel/scenery | ✅ | Keys 1/2/3 |
 | Play / pause | ✅ | Space; **resumes** mid-ride |
-| Stop (reset to start) | ⚠️ Partial | `resetRider()` unused in UI; `R` resets camera + rider |
+| Stop (reset to start) | ✅ | `stop()` — S / Esc / toolbar; separate from pause |
 | Playback speeds | ✅ | 0.25×–4×, validated |
 | Camera follow | ✅ | `F` |
 | Grid | ✅ | `G` |
@@ -118,7 +118,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 
 1. **No track persistence** — largest product gap.
 2. ~~**No straight-line tool**~~ — implemented (Milestone 2).
-3. **No explicit Stop control** — pause vs restart is confusing; `resetRider` not in toolbar.
+3. ~~**No explicit Stop control**~~ — implemented (Milestone 3).
 4. **No flags, scrubbing, or tab overview.**
 5. **No select/move/copy** — erase and redraw only.
 6. **No sharing or gallery.**
@@ -131,7 +131,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 
 | Item | State |
 |------|--------|
-| `resetRider` action | Implemented in store, **not wired** to controls |
+| `stop` action | Wired to toolbar, S, and Escape |
 | `/users/{uid}/tracks` | Firestore rules only |
 | `storage.rules` | Avatars/thumbnails planned, unused |
 | Multi-point / Bosh rider physics | `createRider` removed; ball-only simulation |
@@ -183,7 +183,7 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 
 ---
 
-### Milestone 3 — Stop vs play/pause
+### Milestone 3 — Stop vs play/pause ✅
 
 **User value:** Clear mental model: pause to inspect, stop to rerun from start.
 
@@ -191,9 +191,11 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 
 **Acceptance criteria:**
 
-- [ ] Pause freezes rider; play continues from same state.
-- [ ] Stop resets rider to `riderStart`, time 0, not playing.
-- [ ] `R` / Home / `0` reset view only (or documented combined behavior).
+- [x] Pause freezes rider; play continues from same state.
+- [x] Stop resets rider to `riderStart`, time 0, not playing.
+- [x] `R` / Home / `0` reset view only (or documented combined behavior).
+
+**Implementation note (2026-05-26):** Renamed store action to `stop()`; `resetCamera()` only resets camera + pauses; Square toolbar button; `S` and Escape shortcuts; Escape capture on canvas defers to line-cancel when placing. Tests in `linerider-store.test.ts`.
 
 ---
 

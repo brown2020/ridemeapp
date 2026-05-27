@@ -14,6 +14,7 @@ export function LineriderApp() {
     setTool,
     setLineType,
     togglePlaying,
+    stop,
     undo,
     redo,
     clearTrack,
@@ -28,6 +29,7 @@ export function LineriderApp() {
       setTool: s.setTool,
       setLineType: s.setLineType,
       togglePlaying: s.togglePlaying,
+      stop: s.stop,
       undo: s.undo,
       redo: s.redo,
       clearTrack: s.clearTrack,
@@ -83,6 +85,18 @@ export function LineriderApp() {
         return;
       }
 
+      if (key === "escape") {
+        e.preventDefault();
+        stop();
+        return;
+      }
+
+      if (key === "s") {
+        e.preventDefault();
+        stop();
+        return;
+      }
+
       // Tools
       if (key === "d") setTool("draw");
       if (key === "l") setTool("line");
@@ -130,6 +144,7 @@ export function LineriderApp() {
     toggleCameraFollowing,
     toggleGrid,
     togglePlaying,
+    stop,
     undo,
     redo,
     zoomIn,

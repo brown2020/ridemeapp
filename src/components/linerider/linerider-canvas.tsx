@@ -400,6 +400,7 @@ export function LineriderCanvas() {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape" && linePlacingRef.current) {
         e.preventDefault();
+        e.stopImmediatePropagation();
         cancelLinePlacement();
       }
     }
@@ -450,7 +451,7 @@ export function LineriderCanvas() {
     window.addEventListener("pointerup", onPointerUp);
     window.addEventListener("pointercancel", onPointerUp);
     el.addEventListener("wheel", onWheel, { passive: false });
-    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keydown", onKeyDown, true);
 
     // Initial render
     requestRender();
@@ -459,7 +460,7 @@ export function LineriderCanvas() {
       mounted = false;
       unsubscribeTool();
       unsubscribe();
-      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keydown", onKeyDown, true);
       el.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);

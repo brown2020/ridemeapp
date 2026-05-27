@@ -72,7 +72,7 @@ flowchart LR
 Verified in code (not docs):
 
 - **Drawing:** Pencil (`draw`), straight line (`line`), pan (`pan`), eraser (`erase`). Three line types: `normal`, `accel`, `scenery`. Freehand segments with min draw distance; line tool is click–click with Shift 15° snap; batched erase strokes.
-- **Playback:** Space toggles play/pause. **Pause resumes** from current rider state (does not reset). `resetRider()` exists but is **not** exposed in the toolbar. `R` / Home / `0` call `resetCamera()` (resets camera, rider to start, elapsed time, stops playback).
+- **Playback:** Space play/pause (pause resumes mid-ride). **Stop** (`S`, Escape, toolbar) resets rider to start. `R` / Home / `0` reset **camera view only** via `resetCamera()`.
 - **Physics:** Verlet ball rider, spatial hash collisions, out-of-bounds auto-pause, playback speeds `0.25×–4×` (validated in store).
 - **Camera:** Wheel zoom at cursor, follow toggle (`F`), grid toggle (`G`).
 - **History:** Undo (`⌘Z`) and redo (`⌘⇧Z`), max 200 steps each.
@@ -221,10 +221,11 @@ Stop and report (do not guess) when:
 | E | Erase tool |
 | 1 / 2 / 3 | Line type + draw tool |
 | Space | Play / pause |
+| S / Escape | Stop (reset rider to start) |
 | + / - | Zoom in / out |
 | G | Toggle grid |
 | F | Toggle camera follow |
-| R / Home / 0 | Reset camera + rider to start |
+| R / Home / 0 | Reset camera view only |
 | ⌘Z / Ctrl+Z | Undo |
 | ⌘⇧Z / Ctrl+Shift+Z | Redo |
 | C | Clear track |
