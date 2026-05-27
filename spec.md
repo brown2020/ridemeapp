@@ -68,7 +68,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 | Characters (4) | ✅ | Animated rendering |
 | Auth Google / email / link | ✅ | Optional via env |
 | User profile Firestore | ✅ | `/users/{uid}` |
-| Cloud tracks | ❌ | Rules only at `/users/{uid}/tracks/{id}` |
+| Cloud tracks | ✅ | My Tracks modal; compact Firestore encoding |
 | Tests | ❌ | No runner configured |
 | API routes / Server Actions | ❌ | |
 | Middleware / route guards | ❌ | |
@@ -87,14 +87,14 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 1. Sign In → auth modal → profile created/merged in Firestore.
 2. Character from profile applied to game store via `LineriderApp` effect.
 3. Profile modal → update display name / character.
-4. Tracks still **not** saved to Firestore.
+4. **My Tracks** — save/load/delete in `/users/{uid}/tracks/{id}` (when Firebase configured).
 
 ### Integrations
 
 | Integration | Usage |
 |-------------|--------|
 | Firebase Auth | Google, email/password, email link |
-| Firestore | User profiles only (client SDK) |
+| Firestore | User profiles + cloud tracks (client SDK) |
 | Firebase Storage | Rules exist; **no app code** |
 | Vercel | Hosting **(inferred from README/domain)** |
 
@@ -257,10 +257,12 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 
 **Acceptance criteria:**
 
-- [ ] Signed-in user saves and reloads track from Firestore.
-- [ ] List shows name, date, line count.
-- [ ] Unsaved canvas prompts before load/replace.
-- [ ] Rules reject invalid payloads.
+- [x] Signed-in user saves and reloads track from Firestore.
+- [x] List shows name, date, line count.
+- [x] Unsaved canvas prompts before load/replace.
+- [x] Rules reject invalid payloads.
+
+**Implementation note:** `track-encoding.ts` (`[ax,ay,bx,by,typeIndex]` rows); `firebase/tracks.ts` CRUD; `MyTracksModal` + cloud toolbar button when signed in; `cloudTrackId`/`cloudTrackName` in store; stricter `firestore.rules` on track documents.
 
 **Depends on:** Milestone 6 schema.
 

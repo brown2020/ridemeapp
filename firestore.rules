@@ -47,11 +47,36 @@ service cloud.firestore {
       // ----------------------------------------
       // User's saved tracks: /users/{uid}/tracks/{trackId}
       match /tracks/{trackId} {
+        function isValidRiderStart(riderStart) {
+          return riderStart is map &&
+                 riderStart.keys().hasAll(['x', 'y']) &&
+                 riderStart.x is number &&
+                 riderStart.y is number;
+        }
+
         function isValidTrack() {
           let data = request.resource.data;
-          return data.keys().hasAll(['name']) &&
+          return data.keys().hasAll([
+                   'name',
+                   'version',
+                   'segmentCount',
+                   'segments',
+                   'riderStart',
+                   'character',
+                   'updatedAt'
+                 ]) &&
                  data.name is string &&
-                 data.name.size() <= 100;
+                 data.name.size() > 0 &&
+                 data.name.size() <= 100 &&
+                 data.version == 1 &&
+                 data.segmentCount is int &&
+                 data.segmentCount >= 0 &&
+                 data.segmentCount <= 50000 &&
+                 data.segments is list &&
+                 data.segments.size() <= 50000 &&
+                 data.segmentCount == data.segments.size() &&
+                 isValidRiderStart(data.riderStart) &&
+                 data.character in ['ball', 'snowboarder', 'skateboarder', 'horse'];
         }
 
         allow read: if isOwner();

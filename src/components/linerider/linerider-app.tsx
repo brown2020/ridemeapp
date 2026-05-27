@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { LineriderCanvas } from "@/components/linerider/linerider-canvas";
 import { LineriderControls } from "@/components/linerider/linerider-controls";
+import { MyTracksModal } from "@/components/auth";
 import { useLineriderStore } from "@/stores/linerider-store";
 import { useShallow } from "zustand/react/shallow";
 import { useAuth } from "@/hooks/use-auth";
@@ -14,6 +15,7 @@ import {
 export function LineriderApp() {
   const auth = useAuth();
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [showMyTracks, setShowMyTracks] = useState(false);
 
   const handleOpenTrack = useCallback(async () => {
     const result = await openTrackFilePicker();
@@ -215,9 +217,19 @@ export function LineriderApp() {
           </button>
         </div>
       ) : null}
+      {auth.user && showMyTracks ? (
+        <MyTracksModal
+          auth={auth}
+          onClose={() => setShowMyTracks(false)}
+          onError={(message) => setLoadError(message)}
+        />
+      ) : null}
       <LineriderControls
         onSaveTrack={() => saveTrackToFile()}
         onOpenTrack={() => void handleOpenTrack()}
+        onOpenMyTracks={
+          auth.user ? () => setShowMyTracks(true) : undefined
+        }
       />
     </div>
   );

@@ -36,6 +36,7 @@ import {
   Menu,
   Download,
   FolderOpen,
+  Cloud,
 } from "lucide-react";
 
 // Icon button component
@@ -105,11 +106,13 @@ function Separator() {
 type LineriderControlsProps = Readonly<{
   onSaveTrack?: () => void;
   onOpenTrack?: () => void;
+  onOpenMyTracks?: () => void;
 }>;
 
 export function LineriderControls({
   onSaveTrack,
   onOpenTrack,
+  onOpenMyTracks,
 }: LineriderControlsProps) {
   const [showHelp, setShowHelp] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -326,6 +329,14 @@ export function LineriderControls({
         disabled={!onOpenTrack}
       >
         <FolderOpen className="w-5 h-5" />
+      </IconBtn>
+      <IconBtn
+        onClick={onOpenMyTracks}
+        tooltip="My cloud tracks"
+        aria-label="Open My Tracks"
+        disabled={!onOpenMyTracks}
+      >
+        <Cloud className="w-5 h-5" />
       </IconBtn>
     </div>
   );
@@ -574,6 +585,7 @@ export function LineriderControls({
                     </kbd>{" "}
                     → open JSON
                   </div>
+                  <div>Cloud icon → My Tracks (signed in)</div>
                   <div>
                     Hold{" "}
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">

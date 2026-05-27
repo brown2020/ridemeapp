@@ -4,3 +4,4 @@ export { CharacterSelector } from "./character-selector";
 export { EmailConfirmModal } from "./email-confirm-modal";
 export { ProfileModal } from "./profile-modal";
 export { UserMenu } from "./user-menu";
+export { MyTracksModal } from "./my-tracks-modal";

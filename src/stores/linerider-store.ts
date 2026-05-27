@@ -55,6 +55,10 @@ type LineriderState = Readonly<{
   character: CharacterType;
   flag: FlagSnapshot | null;
 
+  /** Active cloud track when loaded/saved from Firestore (null = new local canvas). */
+  cloudTrackId: string | null;
+  cloudTrackName: string | null;
+
   settings: LineriderSettings;
 
   // Cached spatial hash for performance
@@ -72,6 +76,7 @@ type LineriderActions = Readonly<{
   clearTrack: () => void;
   /** Replace track from a validated JSON file (clears undo/redo, stops playback). */
   loadTrack: (data: TrackFileV1) => void;
+  setCloudTrackMeta: (id: string | null, name?: string | null) => void;
   addSegment: (a: Vec2, b: Vec2) => void;
   eraseAt: (
     p: Vec2,
@@ -180,6 +185,8 @@ export const useLineriderStore = create<LineriderStore>()(
     elapsedTime: 0,
     character: "ball" as CharacterType,
     flag: null,
+    cloudTrackId: null,
+    cloudTrackName: null,
 
     settings: DEFAULT_SETTINGS,
 
@@ -255,9 +262,17 @@ export const useLineriderStore = create<LineriderStore>()(
           isPlaying: false,
           elapsedTime: 0,
           flag: null,
+          cloudTrackId: null,
+          cloudTrackName: null,
           spatialHash: null,
           spatialHashVersion: -1,
         };
+      }),
+
+    setCloudTrackMeta: (id, name = null) =>
+      set({
+        cloudTrackId: id,
+        cloudTrackName: name,
       }),
 
     addSegment: (a, b) =>
