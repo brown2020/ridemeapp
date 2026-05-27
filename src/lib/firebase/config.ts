@@ -14,15 +14,20 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+const REQUIRED_FIREBASE_ENV_KEYS = [
+  "apiKey",
+  "authDomain",
+  "projectId",
+  "storageBucket",
+  "messagingSenderId",
+  "appId",
+] as const satisfies ReadonlyArray<keyof typeof firebaseConfig>;
+
 /**
- * Check if Firebase is configured
+ * Check if all required Firebase env vars are present (avoids half-configured auth).
  */
 export function isFirebaseConfigured(): boolean {
-  return Boolean(
-    firebaseConfig.apiKey &&
-      firebaseConfig.authDomain &&
-      firebaseConfig.projectId
-  );
+  return REQUIRED_FIREBASE_ENV_KEYS.every((key) => Boolean(firebaseConfig[key]));
 }
 
 // Lazy-initialized instances

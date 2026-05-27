@@ -18,6 +18,7 @@ import {
 import {
   PLAYBACK_SPEEDS,
   SPATIAL_CELL_SIZE,
+  ZOOM,
   type PlaybackSpeed,
 } from "@/lib/linerider/constants";
 import type { CharacterType } from "@/lib/linerider/characters";
@@ -60,9 +61,12 @@ type LineriderActions = Readonly<{
   undo: () => void;
   clearTrack: () => void;
   addSegment: (a: Vec2, b: Vec2) => void;
-  eraseAt: (p: Vec2, radiusWorld: number) => void;
+  eraseAt: (
+    p: Vec2,
+    radiusWorld: number,
+    options?: Readonly<{ recordHistory?: boolean }>
+  ) => void;
   addSegments: (segments: Array<Readonly<{ a: Vec2; b: Vec2 }>>) => void;
-  erasePath: (points: Vec2[], radiusWorld: number) => void;
 
   panByScreenDelta: (deltaScreen: Vec2) => void;
   zoomAt: (cursorScreen: Vec2, viewport: Viewport, zoomFactor: number) => void;
@@ -119,6 +123,20 @@ function commitTrackChange(
   };
 }
 
+function applySegmentChange(
+  s: Pick<LineriderState, "history" | "segments" | "trackVersion">,
+  nextSegments: Segment[],
+  recordHistory: boolean
+) {
+  if (recordHistory) {
+    return commitTrackChange(s, nextSegments);
+  }
+  return {
+    segments: nextSegments,
+    trackVersion: s.trackVersion + 1,
+  };
+}
+
 const DEFAULT_CAMERA: Camera = { pos: { x: 0, y: -50 }, zoom: 1.5 };
 const DEFAULT_RIDER_START: Vec2 = { x: 0, y: -100 };
 const DEFAULT_SETTINGS: LineriderSettings = {
@@ -165,13 +183,19 @@ export const useLineriderStore = create<LineriderStore>()(
           history: nextHistory.slice(-MAX_HISTORY),
           segments: previousSegments,
           trackVersion: s.trackVersion + 1,
+          isPlaying: false,
         };
       }),
 
     clearTrack: () =>
       set((s) => {
         if (s.segments.length === 0) return s;
-        return commitTrackChange(s, []);
+        return {
+          ...commitTrackChange(s, []),
+          isPlaying: false,
+          rider: createSimpleRider(s.riderStart),
+          elapsedTime: 0,
+        };
       }),
 
     addSegment: (a, b) =>
@@ -182,13 +206,14 @@ export const useLineriderStore = create<LineriderStore>()(
         ])
       ),
 
-    eraseAt: (p, radiusWorld) =>
+    eraseAt: (p, radiusWorld, options) =>
       set((s) => {
         const nextSegments = s.segments.filter(
           (seg) => distPointToSegment(p, seg.a, seg.b) > radiusWorld
         );
         if (nextSegments.length === s.segments.length) return s;
-        return commitTrackChange(s, nextSegments);
+        const recordHistory = options?.recordHistory !== false;
+        return applySegmentChange(s, nextSegments, recordHistory);
       }),
 
     addSegments: (segments) =>
@@ -202,21 +227,6 @@ export const useLineriderStore = create<LineriderStore>()(
             type: s.lineType,
           })),
         ]);
-      }),
-
-    erasePath: (points, radiusWorld) =>
-      set((s) => {
-        if (points.length === 0) return s;
-        const keep = (seg: Segment) => {
-          for (const p of points) {
-            if (distPointToSegment(p, seg.a, seg.b) <= radiusWorld)
-              return false;
-          }
-          return true;
-        };
-        const nextSegments = s.segments.filter(keep);
-        if (nextSegments.length === s.segments.length) return s;
-        return commitTrackChange(s, nextSegments);
       }),
 
     panByScreenDelta: (deltaScreen) =>
@@ -233,7 +243,11 @@ export const useLineriderStore = create<LineriderStore>()(
     zoomAt: (cursorScreen, viewport, zoomFactor) =>
       set((s) => {
         // Zoom limits: 0.2 (zoomed out) to 5 (zoomed in)
-        const nextZoom = clamp(s.camera.zoom * zoomFactor, 0.2, 5);
+        const nextZoom = clamp(
+          s.camera.zoom * zoomFactor,
+          ZOOM.MIN,
+          ZOOM.MAX
+        );
         const centerScreen = { x: viewport.width / 2, y: viewport.height / 2 };
         const worldAtCursor = {
           x: (cursorScreen.x - centerScreen.x) / s.camera.zoom + s.camera.pos.x,
@@ -392,7 +406,7 @@ export const useLineriderStore = create<LineriderStore>()(
       set((s) => ({
         camera: {
           ...s.camera,
-          zoom: clamp(s.camera.zoom * 1.25, 0.2, 5),
+          zoom: clamp(s.camera.zoom * 1.25, ZOOM.MIN, ZOOM.MAX),
         },
       })),
 
@@ -400,7 +414,7 @@ export const useLineriderStore = create<LineriderStore>()(
       set((s) => ({
         camera: {
           ...s.camera,
-          zoom: clamp(s.camera.zoom / 1.25, 0.2, 5),
+          zoom: clamp(s.camera.zoom / 1.25, ZOOM.MIN, ZOOM.MAX),
         },
       })),
 

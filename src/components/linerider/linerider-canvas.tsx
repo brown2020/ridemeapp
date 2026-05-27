@@ -255,8 +255,9 @@ export function LineriderCanvas() {
         strokeSegmentsRef.current = [];
       } else {
         pointerModeRef.current = "erase";
-        // Erase at initial click position
-        state.eraseAt(world, 15 / state.camera.zoom);
+        const eraseRadius = 15 / state.camera.zoom;
+        state.pushHistory();
+        state.eraseAt(world, eraseRadius, { recordHistory: false });
       }
 
       requestRender();
@@ -294,9 +295,9 @@ export function LineriderCanvas() {
         return;
       }
 
-      // Erase mode - erase in real-time as user drags
+      // Erase mode - one undo step per stroke (history pushed on pointer down)
       const eraseRadius = 15 / state.camera.zoom;
-      state.eraseAt(world, eraseRadius);
+      state.eraseAt(world, eraseRadius, { recordHistory: false });
       lastWorldRef.current = world;
       lastScreenRef.current = screen;
       requestRender();

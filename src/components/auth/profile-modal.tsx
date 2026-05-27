@@ -22,7 +22,9 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
     auth.profile?.displayName || ""
   );
   const [saved, setSaved] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const isBusy = auth.isLoading || isSubmitting;
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const character = useLineriderStore((s) => s.character);
@@ -54,22 +56,29 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    await auth.updateProfile(displayName, character);
+    if (isBusy) return;
 
-    // Only show success if no error occurred
-    const { error } = useAuthStore.getState();
-    if (!error) {
-      setSaved(true);
+    setIsSubmitting(true);
+    try {
+      await auth.updateProfile(displayName, character);
 
-      // Clear any existing timeout before starting a new one
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+      // Only show success if no error occurred
+      const { error } = useAuthStore.getState();
+      if (!error) {
+        setSaved(true);
+
+        // Clear any existing timeout before starting a new one
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+          setSaved(false);
+          timeoutRef.current = null;
+        }, 2000);
       }
-
-      timeoutRef.current = setTimeout(() => {
-        setSaved(false);
-        timeoutRef.current = null;
-      }, 2000);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -177,7 +186,7 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
 
             <button
               type="submit"
-              disabled={auth.isLoading}
+              disabled={isBusy}
               className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
             >
               {auth.isLoading ? "Saving..." : "Save Profile"}

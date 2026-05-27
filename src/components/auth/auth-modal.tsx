@@ -21,7 +21,9 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
   const [password, setPassword] = useState("");
   const [emailLinkSent, setEmailLinkSent] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
+  const isBusy = auth.isLoading || isSubmitting;
 
   // Stable reference to onClose to avoid effect churn
   const onCloseRef = useRef(onClose);
@@ -41,28 +43,44 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (isBusy) return;
 
-    if (mode === "signin") {
-      await auth.signInWithEmail(email, password);
-    } else if (mode === "signup") {
-      await auth.signUpWithEmail(email, password);
-    } else if (mode === "email-link") {
-      const emailToSend = email;
-      const success = await auth.sendEmailLink(emailToSend);
-      if (success) {
-        setSentToEmail(emailToSend);
-        setEmailLinkSent(true);
+    setIsSubmitting(true);
+    try {
+      if (mode === "signin") {
+        await auth.signInWithEmail(email, password);
+      } else if (mode === "signup") {
+        await auth.signUpWithEmail(email, password);
+      } else if (mode === "email-link") {
+        const emailToSend = email;
+        const success = await auth.sendEmailLink(emailToSend);
+        if (success) {
+          setSentToEmail(emailToSend);
+          setEmailLinkSent(true);
+        }
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
-    await auth.signInWithGoogle();
+    if (isBusy) return;
+    setIsSubmitting(true);
+    try {
+      await auth.signInWithGoogle();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleResendEmail = async () => {
-    if (sentToEmail) {
+    if (!sentToEmail || isBusy) return;
+    setIsSubmitting(true);
+    try {
       await auth.sendEmailLink(sentToEmail);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -159,10 +177,10 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
               <div className="space-y-3">
                 <button
                   onClick={handleResendEmail}
-                  disabled={auth.isLoading}
+                  disabled={isBusy}
                   className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
                 >
-                  {auth.isLoading ? (
+                  {isBusy ? (
                     <span className="flex items-center justify-center gap-2">
                       <LoadingSpinner className="h-4 w-4" />
                       Sending...
@@ -221,7 +239,7 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
               {/* Google Sign In */}
               <button
                 onClick={handleGoogleSignIn}
-                disabled={auth.isLoading}
+                disabled={isBusy}
                 className="flex w-full items-center justify-center gap-3 rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
@@ -294,10 +312,10 @@ export function AuthModal({ auth, onClose }: AuthModalProps) {
 
                 <button
                   type="submit"
-                  disabled={auth.isLoading}
+                  disabled={isBusy}
                   className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
                 >
-                  {auth.isLoading ? (
+                  {isBusy ? (
                     <span className="flex items-center justify-center gap-2">
                       <LoadingSpinner className="h-4 w-4" />
                       Loading...

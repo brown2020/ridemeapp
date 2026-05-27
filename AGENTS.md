@@ -95,10 +95,10 @@ npm start            # Run production build locally
 ### Canonical validation (run before committing)
 
 ```bash
-npm run lint && npm run type-check && npm run build
+npm run lint && npm run type-check && npm run test && npm run build
 ```
 
-**No `npm test`** — Jest/Vitest/Playwright are not configured. Do not add a test command unless the task explicitly introduces testing infrastructure.
+Use `CI=true npm run test` in automation. Vitest covers pure lib/store logic and route-protection invariants (no Playwright yet).
 
 ### Non-interactive rules
 
