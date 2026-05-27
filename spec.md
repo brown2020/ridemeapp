@@ -60,7 +60,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 | Grid | ✅ | `G` |
 | Zoom | ✅ | Wheel, +/- keys, toolbar |
 | Undo | ✅ | Max 200 steps |
-| Redo | ❌ | |
+| Redo | ✅ | Max 200 steps; ⌘⇧Z / toolbar |
 | Flags / timeline | ❌ | |
 | Tab overview | ❌ | |
 | Track save/load | ❌ | Ephemeral in memory |
@@ -119,7 +119,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 1. **No track persistence** — largest product gap.
 2. **No straight-line tool** — precise geometry is painful.
 3. **No explicit Stop control** — pause vs restart is confusing; `resetRider` not in toolbar.
-4. **No redo, flags, scrubbing, tab overview.**
+4. **No flags, scrubbing, or tab overview.**
 5. **No select/move/copy** — erase and redraw only.
 6. **No sharing or gallery.**
 7. **No touch-optimized gestures** — mouse/keyboard first.
@@ -150,17 +150,19 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 
 Ordered for product impact and dependencies. Each item is sized for **one focused commit sequence** on `dev`. Acceptance criteria are testable by hand.
 
-### Milestone 1 — Redo
+### Milestone 1 — Redo ✅
 
 **User value:** Recover from accidental undo without redrawing.
 
-**Intent:** Add `redoStack` in `linerider-store`; clear on new edits; `⌘⇧Z` / toolbar button.
+**Intent:** Add `redoHistory` in `linerider-store`; clear on new edits; `⌘⇧Z` / toolbar button.
 
 **Acceptance criteria:**
 
-- [ ] After undo, redo restores previous segments.
-- [ ] New draw/erase/clear clears redo stack.
-- [ ] Toolbar redo disabled when stack empty.
+- [x] After undo, redo restores previous segments.
+- [x] New draw/erase/clear clears redo stack.
+- [x] Toolbar redo disabled when stack empty.
+
+**Implementation note (2026-05-26):** `redoHistory` stack in `linerider-store.ts`; undo pushes current segments to redo; `commitTrackChange` and `pushHistory` clear redo; `Redo2` toolbar button; `⌘⇧Z` / `Ctrl+Shift+Z` in `linerider-app.tsx`. Covered by `linerider-store.test.ts`.
 
 ---
 

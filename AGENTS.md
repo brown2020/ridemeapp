@@ -75,7 +75,7 @@ Verified in code (not docs):
 - **Playback:** Space toggles play/pause. **Pause resumes** from current rider state (does not reset). `resetRider()` exists but is **not** exposed in the toolbar. `R` / Home / `0` call `resetCamera()` (resets camera, rider to start, elapsed time, stops playback).
 - **Physics:** Verlet ball rider, spatial hash collisions, out-of-bounds auto-pause, playback speeds `0.25×–4×` (validated in store).
 - **Camera:** Wheel zoom at cursor, follow toggle (`F`), grid toggle (`G`).
-- **History:** Undo only (`⌘Z` / `Ctrl+Z`), max 200 steps. **No redo.**
+- **History:** Undo (`⌘Z`) and redo (`⌘⇧Z`), max 200 steps each.
 - **Characters:** ball, snowboarder, skateboarder, horse — canvas-rendered; profile sync when signed in.
 - **Auth:** Google popup, email/password, email link (with `EmailConfirmModal` when email missing from storage). Profiles at `/users/{uid}`.
 - **Legal pages:** `/privacy`, `/terms` (static). 404 has home link.
@@ -225,6 +225,7 @@ Stop and report (do not guess) when:
 | F | Toggle camera follow |
 | R / Home / 0 | Reset camera + rider to start |
 | ⌘Z / Ctrl+Z | Undo |
+| ⌘⇧Z / Ctrl+Shift+Z | Redo |
 | C | Clear track |
 | Shift+click | Set rider start |
 

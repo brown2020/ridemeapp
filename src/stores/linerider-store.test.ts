@@ -20,6 +20,7 @@ describe("linerider-store track edits", () => {
         },
       ],
       history: [],
+      redoHistory: [],
       trackVersion: 1,
       isPlaying: true,
       elapsedTime: 5,
@@ -40,6 +41,66 @@ describe("linerider-store track edits", () => {
     });
     useLineriderStore.getState().undo();
     expect(useLineriderStore.getState().isPlaying).toBe(false);
+  });
+
+  it("redo restores segments after undo", () => {
+    useLineriderStore.setState({
+      history: [
+        [
+          {
+            id: "seg-1",
+            a: v(0, 0),
+            b: v(10, 0),
+            type: "normal",
+          },
+        ],
+      ],
+      segments: [
+        {
+          id: "seg-1",
+          a: v(0, 0),
+          b: v(10, 0),
+          type: "normal",
+        },
+        {
+          id: "seg-2",
+          a: v(10, 0),
+          b: v(20, 0),
+          type: "normal",
+        },
+      ],
+    });
+
+    useLineriderStore.getState().undo();
+    expect(useLineriderStore.getState().segments).toHaveLength(1);
+
+    useLineriderStore.getState().redo();
+    expect(useLineriderStore.getState().segments).toHaveLength(2);
+  });
+
+  it("new draw clears redo stack", () => {
+    useLineriderStore.setState({
+      history: [[]],
+      redoHistory: [
+        [
+          {
+            id: "seg-1",
+            a: v(0, 0),
+            b: v(10, 0),
+            type: "normal",
+          },
+          {
+            id: "seg-2",
+            a: v(10, 0),
+            b: v(20, 0),
+            type: "normal",
+          },
+        ],
+      ],
+    });
+
+    useLineriderStore.getState().addSegment(v(30, 0), v(40, 0));
+    expect(useLineriderStore.getState().redoHistory).toHaveLength(0);
   });
 
   it("batches erase stroke into one history entry", () => {

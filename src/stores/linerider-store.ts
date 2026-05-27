@@ -36,6 +36,7 @@ type LineriderState = Readonly<{
   lineType: LineType;
   segments: Segment[];
   history: Segment[][];
+  redoHistory: Segment[][];
   trackVersion: number;
 
   camera: Camera;
@@ -59,6 +60,7 @@ type LineriderActions = Readonly<{
 
   pushHistory: () => void;
   undo: () => void;
+  redo: () => void;
   clearTrack: () => void;
   addSegment: (a: Vec2, b: Vec2) => void;
   eraseAt: (
@@ -118,6 +120,7 @@ function commitTrackChange(
   const nextHistory = [...s.history, s.segments].slice(-MAX_HISTORY);
   return {
     history: nextHistory,
+    redoHistory: [] as Segment[][],
     segments: nextSegments,
     trackVersion: s.trackVersion + 1,
   };
@@ -152,6 +155,7 @@ export const useLineriderStore = create<LineriderStore>()(
     lineType: "normal",
     segments: [],
     history: [],
+    redoHistory: [],
     trackVersion: 0,
 
     camera: DEFAULT_CAMERA,
@@ -172,7 +176,10 @@ export const useLineriderStore = create<LineriderStore>()(
     setLineType: (lineType) => set({ lineType }),
 
     pushHistory: () =>
-      set((s) => ({ history: [...s.history, s.segments].slice(-MAX_HISTORY) })),
+      set((s) => ({
+        history: [...s.history, s.segments].slice(-MAX_HISTORY),
+        redoHistory: [],
+      })),
 
     undo: () =>
       set((s) => {
@@ -181,7 +188,22 @@ export const useLineriderStore = create<LineriderStore>()(
         const previousSegments = s.history[s.history.length - 1] ?? [];
         return {
           history: nextHistory.slice(-MAX_HISTORY),
+          redoHistory: [...s.redoHistory, s.segments].slice(-MAX_HISTORY),
           segments: previousSegments,
+          trackVersion: s.trackVersion + 1,
+          isPlaying: false,
+        };
+      }),
+
+    redo: () =>
+      set((s) => {
+        if (s.redoHistory.length === 0) return s;
+        const nextRedo = s.redoHistory.slice(0, -1);
+        const nextSegments = s.redoHistory[s.redoHistory.length - 1] ?? [];
+        return {
+          history: [...s.history, s.segments].slice(-MAX_HISTORY),
+          redoHistory: nextRedo.slice(-MAX_HISTORY),
+          segments: nextSegments,
           trackVersion: s.trackVersion + 1,
           isPlaying: false,
         };

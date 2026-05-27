@@ -15,6 +15,7 @@ export function LineriderApp() {
     setLineType,
     togglePlaying,
     undo,
+    redo,
     clearTrack,
     toggleGrid,
     toggleCameraFollowing,
@@ -28,6 +29,7 @@ export function LineriderApp() {
       setLineType: s.setLineType,
       togglePlaying: s.togglePlaying,
       undo: s.undo,
+      redo: s.redo,
       clearTrack: s.clearTrack,
       toggleGrid: s.toggleGrid,
       toggleCameraFollowing: s.toggleCameraFollowing,
@@ -61,10 +63,14 @@ export function LineriderApp() {
 
       if (e.defaultPrevented) return;
 
-      // Undo
+      // Undo / redo
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
-        undo();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
         return;
       }
 
@@ -124,6 +130,7 @@ export function LineriderApp() {
     toggleGrid,
     togglePlaying,
     undo,
+    redo,
     zoomIn,
     zoomOut,
   ]);

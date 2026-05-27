@@ -18,6 +18,7 @@ import {
   Focus,
   Home,
   Undo2,
+  Redo2,
   Trash2,
   HelpCircle,
   ChevronDown,
@@ -109,6 +110,8 @@ export function LineriderControls() {
     isPlaying,
     togglePlaying,
     undo,
+    redo,
+    canRedo,
     clearTrack,
     settings,
     toggleGrid,
@@ -127,6 +130,8 @@ export function LineriderControls() {
       isPlaying: s.isPlaying,
       togglePlaying: s.togglePlaying,
       undo: s.undo,
+      redo: s.redo,
+      canRedo: s.redoHistory.length > 0,
       clearTrack: s.clearTrack,
       settings: s.settings,
       toggleGrid: s.toggleGrid,
@@ -278,6 +283,14 @@ export function LineriderControls() {
     <div className="flex items-center space-x-1">
       <IconBtn onClick={undo} tooltip="Undo (⌘Z)">
         <Undo2 className="w-5 h-5" />
+      </IconBtn>
+      <IconBtn
+        onClick={redo}
+        disabled={!canRedo}
+        tooltip="Redo (⌘⇧Z)"
+        aria-label="Redo"
+      >
+        <Redo2 className="w-5 h-5" />
       </IconBtn>
       <IconBtn variant="danger" onClick={clearTrack} tooltip="Clear all">
         <Trash2 className="w-5 h-5" />
@@ -484,7 +497,11 @@ export function LineriderControls() {
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       ⌘Z
                     </kbd>{" "}
-                    → undo
+                    → undo,{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      ⌘⇧Z
+                    </kbd>{" "}
+                    → redo
                   </div>
                 </div>
               </div>
