@@ -223,6 +223,25 @@ describe("linerider-store track edits", () => {
     expect(useLineriderStore.getState().flag).toBeNull();
   });
 
+  it("loadTrack replaces segments and clears history", () => {
+    useLineriderStore.getState().loadTrack({
+      version: 1,
+      name: "Imported",
+      segments: [
+        { a: v(1, 2), b: v(3, 4), type: "scenery" },
+      ],
+      riderStart: v(0, -200),
+      character: "horse",
+    });
+    const state = useLineriderStore.getState();
+    expect(state.segments).toHaveLength(1);
+    expect(state.segments[0]?.type).toBe("scenery");
+    expect(state.history).toHaveLength(0);
+    expect(state.isPlaying).toBe(false);
+    expect(state.character).toBe("horse");
+    expect(state.riderStart).toEqual({ x: 0, y: -200 });
+  });
+
   it("batches erase stroke into one history entry", () => {
     useLineriderStore.getState().pushHistory();
     useLineriderStore.getState().eraseAt(v(5, 0), 2, { recordHistory: false });

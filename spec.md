@@ -63,7 +63,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 | Redo | ✅ | Max 200 steps; ⌘⇧Z / toolbar |
 | Flags / timeline | ⚠️ Partial | Set/jump flag (`I`/`F`); no scrubbing yet |
 | Tab overview | ✅ | Hold Tab; pan only; release restores camera |
-| Track save/load | ❌ | Ephemeral in memory |
+| Track save/load | ✅ | Local JSON download/open; ⌘S / ⌘O |
 | Track sharing | ❌ | |
 | Characters (4) | ✅ | Animated rendering |
 | Auth Google / email / link | ✅ | Optional via env |
@@ -240,10 +240,12 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 
 **Acceptance criteria:**
 
-- [ ] Save downloads valid JSON reflecting current canvas.
-- [ ] Load replaces track after confirmation.
-- [ ] Invalid files show error, no partial corrupt state.
-- [ ] Works without Firebase.
+- [x] Save downloads valid JSON reflecting current canvas.
+- [x] Load replaces track after confirmation.
+- [x] Invalid files show error, no partial corrupt state.
+- [x] Works without Firebase.
+
+**Implementation note:** `track-file.ts` (v1 schema + validation), `track-file-client.ts` (download/picker), `loadTrack` in `linerider-store`; toolbar save/open icons; dismissible error banner in `linerider-app`.
 
 ---
 

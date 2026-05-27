@@ -80,7 +80,8 @@ Verified in code (not docs):
 - **Characters:** ball, snowboarder, skateboarder, horse — canvas-rendered; profile sync when signed in.
 - **Auth:** Google popup, email/password, email link (with `EmailConfirmModal` when email missing from storage). Profiles at `/users/{uid}`.
 - **Legal pages:** `/privacy`, `/terms` (static). 404 has home link.
-- **Not implemented:** Track save/load/share, straight-line tool, flags/timeline, redo, select/move, API routes, tests, PWA/offline.
+- **Local tracks:** Save/open JSON (`⌘S` / `⌘O`, toolbar); schema v1 in `track-file.ts`.
+- **Not implemented:** Cloud save/share, timeline scrubbing, select/move, API routes, PWA/offline.
 
 ## Important commands
 

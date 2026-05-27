@@ -1,14 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { LineriderCanvas } from "@/components/linerider/linerider-canvas";
 import { LineriderControls } from "@/components/linerider/linerider-controls";
 import { useLineriderStore } from "@/stores/linerider-store";
 import { useShallow } from "zustand/react/shallow";
 import { useAuth } from "@/hooks/use-auth";
+import {
+  openTrackFilePicker,
+  saveTrackToFile,
+} from "@/lib/linerider/track-file-client";
 
 export function LineriderApp() {
   const auth = useAuth();
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const handleOpenTrack = useCallback(async () => {
+    const result = await openTrackFilePicker();
+    if (!result.ok && result.error) {
+      setLoadError(result.error);
+    }
+  }, []);
 
   const {
     setTool,
@@ -69,6 +81,20 @@ export function LineriderApp() {
 
       if (e.defaultPrevented) return;
 
+      const key = e.key.toLowerCase();
+
+      if ((e.ctrlKey || e.metaKey) && key === "s") {
+        e.preventDefault();
+        saveTrackToFile();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && key === "o") {
+        e.preventDefault();
+        void handleOpenTrack();
+        return;
+      }
+
       // Undo / redo
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         e.preventDefault();
@@ -79,8 +105,6 @@ export function LineriderApp() {
         }
         return;
       }
-
-      const key = e.key.toLowerCase();
 
       // Playback
       if (key === " ") {
@@ -169,12 +193,32 @@ export function LineriderApp() {
     redo,
     zoomIn,
     zoomOut,
+    handleOpenTrack,
   ]);
 
   return (
     <div className="relative h-dvh w-screen overflow-hidden bg-neutral-100 text-black">
       <LineriderCanvas />
-      <LineriderControls />
+      {loadError ? (
+        <div
+          role="alert"
+          className="pointer-events-auto absolute left-1/2 top-16 z-50 flex max-w-md -translate-x-1/2 items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 shadow-lg"
+        >
+          <p className="flex-1">{loadError}</p>
+          <button
+            type="button"
+            onClick={() => setLoadError(null)}
+            className="shrink-0 rounded-md px-2 py-1 font-medium text-red-800 hover:bg-red-100 outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+            aria-label="Dismiss error"
+          >
+            Dismiss
+          </button>
+        </div>
+      ) : null}
+      <LineriderControls
+        onSaveTrack={() => saveTrackToFile()}
+        onOpenTrack={() => void handleOpenTrack()}
+      />
     </div>
   );
 }

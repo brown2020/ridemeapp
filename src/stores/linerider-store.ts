@@ -28,6 +28,7 @@ import {
   type PlaybackSpeed,
 } from "@/lib/linerider/constants";
 import type { CharacterType } from "@/lib/linerider/characters";
+import type { TrackFileV1 } from "@/lib/linerider/track-file";
 
 export type ToolMode = "draw" | "line" | "pan" | "erase";
 
@@ -69,6 +70,8 @@ type LineriderActions = Readonly<{
   undo: () => void;
   redo: () => void;
   clearTrack: () => void;
+  /** Replace track from a validated JSON file (clears undo/redo, stops playback). */
+  loadTrack: (data: TrackFileV1) => void;
   addSegment: (a: Vec2, b: Vec2) => void;
   eraseAt: (
     p: Vec2,
@@ -230,6 +233,30 @@ export const useLineriderStore = create<LineriderStore>()(
           rider: createSimpleRider(s.riderStart),
           elapsedTime: 0,
           flag: null,
+        };
+      }),
+
+    loadTrack: (data) =>
+      set((s) => {
+        const segments: Segment[] = data.segments.map((seg) => ({
+          id: makeId(),
+          a: { x: seg.a.x, y: seg.a.y },
+          b: { x: seg.b.x, y: seg.b.y },
+          type: seg.type,
+        }));
+        return {
+          segments,
+          history: [],
+          redoHistory: [],
+          trackVersion: s.trackVersion + 1,
+          riderStart: { x: data.riderStart.x, y: data.riderStart.y },
+          rider: createSimpleRider(data.riderStart),
+          character: data.character,
+          isPlaying: false,
+          elapsedTime: 0,
+          flag: null,
+          spatialHash: null,
+          spatialHashVersion: -1,
         };
       }),
 

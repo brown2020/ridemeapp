@@ -226,6 +226,8 @@ Storage:
 | `3`          | Scenery line (green)    |
 | `Space`      | Play / Pause            |
 | Hold `Tab`   | Fit full track overview (release to restore view) |
+| `⌘S` / `Ctrl+S` | Save track to JSON file |
+| `⌘O` / `Ctrl+O` | Open track from JSON file |
 | `R` / Home / `0` | Reset camera and rider to start |
 | `G`          | Toggle grid visibility  |
 | `F`          | Toggle camera follow    |

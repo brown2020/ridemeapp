@@ -34,6 +34,8 @@ import {
   Turtle,
   Rabbit,
   Menu,
+  Download,
+  FolderOpen,
 } from "lucide-react";
 
 // Icon button component
@@ -100,7 +102,15 @@ function Separator() {
   return <div className="w-px h-6 bg-slate-200 mx-1" />;
 }
 
-export function LineriderControls() {
+type LineriderControlsProps = Readonly<{
+  onSaveTrack?: () => void;
+  onOpenTrack?: () => void;
+}>;
+
+export function LineriderControls({
+  onSaveTrack,
+  onOpenTrack,
+}: LineriderControlsProps) {
   const [showHelp, setShowHelp] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -299,6 +309,27 @@ export function LineriderControls() {
     </div>
   );
 
+  const FileControls = (
+    <div className="flex items-center space-x-1">
+      <IconBtn
+        onClick={onSaveTrack}
+        tooltip="Save track (⌘S)"
+        aria-label="Save track to JSON file"
+        disabled={!onSaveTrack}
+      >
+        <Download className="w-5 h-5" />
+      </IconBtn>
+      <IconBtn
+        onClick={onOpenTrack}
+        tooltip="Open track (⌘O)"
+        aria-label="Open track from JSON file"
+        disabled={!onOpenTrack}
+      >
+        <FolderOpen className="w-5 h-5" />
+      </IconBtn>
+    </div>
+  );
+
   const ActionControls = (
     <div className="flex items-center space-x-1">
       <IconBtn onClick={undo} tooltip="Undo (⌘Z)">
@@ -355,6 +386,7 @@ export function LineriderControls() {
               {DrawingTools}
               {tool === "draw" && LineTypes}
               {ViewControls}
+              {FileControls}
               {ActionControls}
             </div>
           </div>
@@ -391,6 +423,10 @@ export function LineriderControls() {
         <Separator />
 
         {ViewControls}
+
+        <Separator />
+
+        {FileControls}
 
         <Separator />
 
@@ -527,6 +563,16 @@ export function LineriderControls() {
                       Shift+F
                     </kbd>{" "}
                     → follow rider
+                  </div>
+                  <div>
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      ⌘S
+                    </kbd>{" "}
+                    → save JSON,{" "}
+                    <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
+                      ⌘O
+                    </kbd>{" "}
+                    → open JSON
                   </div>
                   <div>
                     Hold{" "}
