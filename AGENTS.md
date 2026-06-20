@@ -22,7 +22,7 @@ Single source of truth for autonomous agents (Codex, Cursor, Claude Code, etc.) 
 | Icons | lucide-react |
 | Package manager | **npm** (`package-lock.json` only — never switch) |
 
-There is **no** custom backend, API routes, Server Actions, middleware, job queue, or test runner in this repo today.
+There is **no** custom backend, API routes, Server Actions, middleware, or job queue in this repo today. Vitest is configured for pure library/store and invariant tests.
 
 ## Repository structure
 
@@ -42,7 +42,7 @@ src/
     └── linerider-store.ts
 ```
 
-Root config: `next.config.mjs`, `eslint.config.mjs`, `tsconfig.json`, `firestore.rules`, `storage.rules`, `env.example`.
+Root config: `next.config.mjs`, `eslint.config.mjs`, `tsconfig.json`, `vitest.config.ts`, `firestore.rules`, `storage.rules`, `env.example`.
 
 Product roadmap and acceptance criteria: **`spec.md`** (read before feature work).
 
@@ -150,8 +150,9 @@ Use `CI=true npm run test` in automation. Vitest covers pure lib/store logic and
 
 ## Testing expectations
 
-- No automated tests. Manual smoke test: draw segments, play/pause, undo, sign-in (if Firebase configured).
-- Do not block doc-only commits on absent tests.
+- Vitest is configured via `vitest.config.ts`; tests cover pure Line Rider helpers, store logic, Firebase config/track helpers, and route-protection invariants.
+- Manual smoke test for UI changes: draw segments, play/pause, undo/redo, save/open, cloud tracks if Firebase is configured, and sign-in if Firebase env is available.
+- Do not require Firebase secrets or headed browsers for routine validation.
 
 ## Files and systems requiring extra caution
 
@@ -188,7 +189,7 @@ Do **not** create feature branches. Do **not** open pull requests unless the use
 
 - [ ] On branch `dev` (not `main`)
 - [ ] Change matches the assigned task scope (one logical unit)
-- [ ] `npm run lint && npm run type-check && npm run build` pass
+- [ ] `npm run lint && npm run type-check && npm run test && npm run build` pass
 - [ ] No secrets committed; env documented in `env.example` if new vars added
 - [ ] `spec.md` updated if product behavior or roadmap changed
 - [ ] Pushed to `origin/dev` when the task requires delivery

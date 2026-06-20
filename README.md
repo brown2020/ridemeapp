@@ -4,12 +4,12 @@ A free, open-source **Line Rider** clone built with modern web technologies. Dra
 
 **🌐 Live at [Ride.me](https://ride.me)**
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.0.10-black?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2.3-61DAFB?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1.18-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
-[![Zustand](https://img.shields.io/badge/Zustand-5.0.9-443E38?logo=npm)](https://zustand-demo.pmnd.rs/)
-[![Firebase](https://img.shields.io/badge/Firebase-12.6.0-FFCA28?logo=firebase)](https://firebase.google.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.6-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.6-61DAFB?logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0.3-3178C6?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.2.4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
+[![Zustand](https://img.shields.io/badge/Zustand-5.0.13-443E38?logo=npm)](https://zustand-demo.pmnd.rs/)
+[![Firebase](https://img.shields.io/badge/Firebase-12.13.0-FFCA28?logo=firebase)](https://firebase.google.com/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 <p align="center">
@@ -99,7 +99,7 @@ Each character features unique animations that respond to speed and movement dir
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) **18.0 or higher**
-- npm, yarn, pnpm, or bun
+- npm
 
 ### Installation
 
@@ -185,7 +185,7 @@ The repository includes pre-configured security rules for Firestore and Storage.
 ```
 Firestore:
 /users/{uid}                    ← User profile document
-/users/{uid}/tracks/{trackId}   ← Saved tracks (future)
+/users/{uid}/tracks/{trackId}   ← Saved tracks
 /users/{uid}/settings/{docId}   ← User preferences (future)
 
 Storage:
@@ -219,20 +219,26 @@ Storage:
 | Key          | Action                  |
 | ------------ | ----------------------- |
 | `D`          | Draw tool               |
+| `L`          | Straight line tool      |
 | `H` / `P`    | Pan tool                |
 | `E`          | Erase tool              |
 | `1`          | Normal line (blue)      |
 | `2`          | Acceleration line (red) |
 | `3`          | Scenery line (green)    |
 | `Space`      | Play / Pause            |
+| `S` / `Esc`  | Stop and reset rider to start |
 | Hold `Tab`   | Fit full track overview (release to restore view) |
 | `⌘S` / `Ctrl+S` | Save track to JSON file |
 | `⌘O` / `Ctrl+O` | Open track from JSON file |
-| `R` / Home / `0` | Reset camera and rider to start |
+| `R` / Home / `0` | Reset camera view |
 | `G`          | Toggle grid visibility  |
-| `F`          | Toggle camera follow    |
+| `I`          | Set flag at current rider state |
+| `F`          | Jump to flag            |
+| `Shift+F`    | Toggle camera follow    |
+| `+` / `-`    | Zoom in / out           |
 | `C`          | Clear all lines         |
 | `Ctrl/⌘ + Z` | Undo last action        |
+| `Ctrl/⌘ + Shift + Z` | Redo last undone action |
 
 ---
 
@@ -304,24 +310,24 @@ ridemeapp/
 
 | Technology                                    | Version | Purpose                         |
 | --------------------------------------------- | ------- | ------------------------------- |
-| [Next.js](https://nextjs.org/)                | 16.0.10 | React framework with App Router |
-| [React](https://react.dev/)                   | 19.2.3  | UI component library            |
-| [TypeScript](https://www.typescriptlang.org/) | 5.x     | Type-safe JavaScript            |
-| [Zustand](https://zustand-demo.pmnd.rs/)      | 5.0.9   | Lightweight state management    |
-| [Firebase](https://firebase.google.com/)      | 12.6.0  | Authentication & database       |
-| [Tailwind CSS](https://tailwindcss.com/)      | 4.1.18  | Utility-first CSS framework     |
+| [Next.js](https://nextjs.org/)                | 16.2.6  | React framework with App Router |
+| [React](https://react.dev/)                   | 19.2.6  | UI component library            |
+| [TypeScript](https://www.typescriptlang.org/) | 6.0.3   | Type-safe JavaScript            |
+| [Zustand](https://zustand-demo.pmnd.rs/)      | 5.0.13  | Lightweight state management    |
+| [Firebase](https://firebase.google.com/)      | 12.13.0 | Authentication & database       |
+| [Tailwind CSS](https://tailwindcss.com/)      | 4.2.4   | Utility-first CSS framework     |
 | [PostCSS](https://postcss.org/)               | 8.x     | CSS transformation pipeline     |
-| [ESLint](https://eslint.org/)                 | 9.39.2  | Code linting (flat config)      |
+| [ESLint](https://eslint.org/)                 | 10.4.0  | Code linting (flat config)      |
 
 ### Development Dependencies
 
 | Package                | Version | Purpose                      |
 | ---------------------- | ------- | ---------------------------- |
-| `@tailwindcss/postcss` | 4.1.18  | Tailwind PostCSS plugin      |
-| `@types/node`          | 25.0.1  | Node.js type definitions     |
-| `@types/react`         | 19.2.7  | React type definitions       |
+| `@tailwindcss/postcss` | 4.3.0   | Tailwind PostCSS plugin      |
+| `@types/node`          | 25.9.1  | Node.js type definitions     |
+| `@types/react`         | 19.2.15 | React type definitions       |
 | `@types/react-dom`     | 19.2.3  | React DOM type definitions   |
-| `eslint-config-next`   | 16.0.10 | Next.js ESLint configuration |
+| `eslint-config-next`   | 16.2.6  | Next.js ESLint configuration |
 
 ---
 
@@ -422,7 +428,7 @@ npm start
 
 ```bash
 # Run TypeScript compiler in check mode
-npx tsc --noEmit
+npm run type-check
 ```
 
 ---
@@ -438,7 +444,7 @@ Contributions are welcome! Here's how you can help:
 3. **Install** dependencies: `npm install`
 4. **Checkout** the `dev` branch (or branch from it for your fork)
 5. **Make** your changes
-6. **Validate:** `npm run lint && npm run type-check && npm run build`
+6. **Validate:** `npm run lint && npm run type-check && npm run test && npm run build`
 7. **Commit** and push to your branch, then open a Pull Request into `dev` or `main` as the maintainers prefer
 
 For autonomous agents, see **[AGENTS.md](./AGENTS.md)**. For product scope and roadmap, see **[spec.md](./spec.md)**.
@@ -451,6 +457,9 @@ npm run dev
 
 # Run linting
 npm run lint
+
+# Run automated tests
+npm run test
 
 # Build for production (catches type errors)
 npm run build
@@ -471,6 +480,8 @@ Product milestones and acceptance criteria live in **[spec.md](./spec.md)**.
 | `npm run start` | Start production server                  |
 | `npm run lint`  | Run ESLint for code quality              |
 | `npm run type-check` | TypeScript check without emit       |
+| `npm run test`  | Run Vitest test suite                    |
+| `npm run test:ci` | Run Vitest with CI mode enabled        |
 
 ---
 

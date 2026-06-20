@@ -9,7 +9,7 @@ Agent implementation rules: **AGENTS.md**. User-facing setup: **README.md**.
 
 ### Product promise
 
-Draw tracks in the browser, press play, and watch your rider follow the lines with believable physics—like the classic Line Rider, free and open source, with optional sign-in to save identity (character, display name) and a planned path to saved and shared tracks.
+Draw tracks in the browser, press play, and watch your rider follow the lines with believable physics—like the classic Line Rider, free and open source, with local/cloud track saves and a planned path to shared tracks.
 
 ### Target users
 
@@ -17,20 +17,21 @@ Draw tracks in the browser, press play, and watch your rider follow the lines wi
 |---------|------|
 | Casual players | Quick doodles, immediate play, no account |
 | Nostalgia / Line Rider fans | Familiar line types, shortcuts, physics feel |
-| Track builders | Precise geometry, iteration on sections, persistence (gap today) |
-| Signed-in users | Profile, character, future cloud tracks |
+| Track builders | Precise geometry, iteration on sections, persistence |
+| Signed-in users | Profile, character, cloud tracks |
 
 ### Core workflows (today)
 
 1. **Create** — Open `/`, draw with pencil, switch line types, pan/zoom, set start with Shift+click.
 2. **Test** — Space to play/pause; adjust speed; optional camera follow.
-3. **Refine** — Undo, erase, clear; repeat until satisfied (work is lost on refresh).
-4. **Optional identity** — Sign in (if Firebase configured), pick character, edit profile.
+3. **Refine** — Undo, redo, erase, clear; repeat until satisfied.
+4. **Persist** — Save/open a local JSON file or use My Tracks when signed in and Firebase is configured.
+5. **Optional identity** — Sign in (if Firebase configured), pick character, edit profile.
 
 ### Product goals
 
 1. **Parity** with Line Rider table-stakes editor and playback (see roadmap).
-2. **Persistence** — Never lose work: local files first, then cloud for signed-in users.
+2. **Persistence** — Never lose work: local files and cloud saves for signed-in users, with future sharing.
 3. **Sharing** — One-link playback and optional fork (differentiator vs linerider.com).
 4. **Polish** — Modern responsive UI, accurate help text, mobile-friendly input (later).
 
@@ -38,7 +39,7 @@ Draw tracks in the browser, press play, and watch your rider follow the lines wi
 
 ## 2. Current application state
 
-*Verified by code review (May 2026). Items marked **(inferred)** are not backed by automated tests.*
+*Verified by code review (June 2026). Items marked **(inferred)** are not backed by automated tests.*
 
 ### What the app does
 
@@ -69,7 +70,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 | Auth Google / email / link | ✅ | Optional via env |
 | User profile Firestore | ✅ | `/users/{uid}` |
 | Cloud tracks | ✅ | My Tracks modal; compact Firestore encoding |
-| Tests | ❌ | No runner configured |
+| Tests | ✅ | Vitest configured; pure helpers, store logic, Firebase config/tracks, and route-protection invariants |
 | API routes / Server Actions | ❌ | |
 | Middleware / route guards | ❌ | |
 
@@ -80,7 +81,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 1. Load `/` → canvas ready, default rider start near origin.
 2. Draw → segments append to Zustand store, spatial hash invalidated on version bump.
 3. Play → physics loop in canvas; HUD shows time and speed; OOB auto-pauses.
-4. Refresh → **all track data lost**.
+4. Refresh → unsaved canvas changes are lost unless the track was exported to JSON or saved to My Tracks.
 
 **Signed-in (Firebase configured)**
 
@@ -116,15 +117,15 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 
 ### Known limitations
 
-1. **No track persistence** — largest product gap.
+1. **No shareable track URLs** — largest remaining product gap after local/cloud persistence.
 2. ~~**No straight-line tool**~~ — implemented (Milestone 2).
 3. ~~**No explicit Stop control**~~ — implemented (Milestone 3).
 4. **No timeline scrubbing.**
 5. **No select/move/copy** — erase and redraw only.
 6. **No sharing or gallery.**
 7. **No touch-optimized gestures** — mouse/keyboard first.
-8. **No automated tests.**
-9. **Help panel incomplete** — omits `C`, full zoom keys, pause/resume nuance.
+8. **No browser/e2e tests.**
+9. **Help panel incomplete** — verify it against `AGENTS.md` before shortcut-facing changes.
 10. **Auth UI hidden** when Firebase env missing (by design).
 
 ### Partially implemented / abandoned
@@ -132,7 +133,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 | Item | State |
 |------|--------|
 | `stop` action | Wired to toolbar, S, and Escape |
-| `/users/{uid}/tracks` | Firestore rules only |
+| `/users/{uid}/tracks` | Implemented in Firestore rules and client CRUD |
 | `storage.rules` | Avatars/thumbnails planned, unused |
 | Multi-point / Bosh rider physics | `createRider` removed; ball-only simulation |
 
