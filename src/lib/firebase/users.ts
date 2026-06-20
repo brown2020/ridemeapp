@@ -86,7 +86,7 @@ export async function getUserProfile(
 /**
  * Create or update a user profile from Firebase Auth user.
  * Reads once so create writes include the complete schema required by
- * Firestore rules without overwriting existing profile choices on refresh.
+ * Firestore rules without forcing default values over existing profiles.
  */
 export async function createOrUpdateUserProfile(
   user: User,

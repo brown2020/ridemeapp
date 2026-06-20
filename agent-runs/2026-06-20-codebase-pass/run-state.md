@@ -11,24 +11,22 @@
 
 ## Current State
 
-- Phase: Package and Dead-Code Cleanup
-- Task: T-005
-- Status: Cleanup ready
-- Last command: npm run build
-- Last result: Passed after package update batch
-- Last pushed commit: `f37941be39bb80ab623d14eebb989ab05e0abc53`
-- Branch sync: local dev matched origin/dev before package edits
-- Working tree: dirty with owned package cleanup files and report updates
-- Next action: Inspect diff, commit package cleanup, dry-run push, push, fetch, confirm sync
+- Phase: Review
+- Task: T-006
+- Status: Review report ready
+- Last command: cumulative diff review
+- Last result: Judge PASS with deferred non-blocking residuals
+- Last pushed commit: `f7fdaf58b23297caff6c7ed22b67f6595c4f1e7b`
+- Branch sync: local dev matched origin/dev before review cleanup
+- Working tree: dirty with owned review report/comment cleanup
+- Next action: Run lint, inspect diff, commit review report/comment cleanup, dry-run push, push, fetch, confirm sync
 
 ## Dirty File Classification
 
 | Path | Classification | Owner/Reason |
 | --- | --- | --- |
-| `package.json` | In-scope package manifest | Safe patch/minor dependency updates |
-| `package-lock.json` | In-scope lockfile | Safe patch/minor dependency updates |
-| `README.md` | Safe-to-commit | Package version references updated after dependency update |
-| `agent-runs/2026-06-20-codebase-pass/05-package-and-dead-code-cleanup.md` | Safe-to-commit | Cleanup report |
+| `src/lib/firebase/users.ts` | In-scope review cleanup | Comment wording clarification |
+| `agent-runs/2026-06-20-codebase-pass/06-review.md` | Safe-to-commit | Review report |
 | `agent-runs/2026-06-20-codebase-pass/run-state.md` | Safe-to-commit | Run ledger update |
 | `agent-runs/2026-06-20-codebase-pass/task-queue.md` | Safe-to-commit | Queue status update |
 
