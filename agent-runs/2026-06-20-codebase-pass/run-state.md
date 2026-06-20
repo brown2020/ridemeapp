@@ -11,23 +11,24 @@
 
 ## Current State
 
-- Phase: Execute Fixes and Improvements
-- Task: T-004
-- Status: Fix ready
+- Phase: Package and Dead-Code Cleanup
+- Task: T-005
+- Status: Cleanup ready
 - Last command: npm run build
-- Last result: Passed after auth/rules fix
-- Last pushed commit: `965673ae16da5444e7c8efbdc178efb92b64f45e`
-- Branch sync: local dev matched origin/dev before source edits
-- Working tree: dirty with owned auth/rules fix and execution report updates
-- Next action: Run lint after report update, inspect diff, commit fix, dry-run push, push, fetch, confirm sync
+- Last result: Passed after package update batch
+- Last pushed commit: `f37941be39bb80ab623d14eebb989ab05e0abc53`
+- Branch sync: local dev matched origin/dev before package edits
+- Working tree: dirty with owned package cleanup files and report updates
+- Next action: Inspect diff, commit package cleanup, dry-run push, push, fetch, confirm sync
 
 ## Dirty File Classification
 
 | Path | Classification | Owner/Reason |
 | --- | --- | --- |
-| `src/lib/firebase/users.ts` | In-scope source | F-001 profile create/rules alignment |
-| `firestore.rules` | In-scope security rules | F-002 strict profile/track document shape |
-| `agent-runs/2026-06-20-codebase-pass/04-execute-fixes-and-improvements.md` | Safe-to-commit | Execution report |
+| `package.json` | In-scope package manifest | Safe patch/minor dependency updates |
+| `package-lock.json` | In-scope lockfile | Safe patch/minor dependency updates |
+| `README.md` | Safe-to-commit | Package version references updated after dependency update |
+| `agent-runs/2026-06-20-codebase-pass/05-package-and-dead-code-cleanup.md` | Safe-to-commit | Cleanup report |
 | `agent-runs/2026-06-20-codebase-pass/run-state.md` | Safe-to-commit | Run ledger update |
 | `agent-runs/2026-06-20-codebase-pass/task-queue.md` | Safe-to-commit | Queue status update |
 
@@ -37,7 +38,8 @@
 
 ## Deferred Items
 
-- Package drift/advisories deferred to Package and Dead-Code Cleanup phase.
+- Residual Next nested PostCSS audit advisory deferred; `npm audit fix --force` would downgrade Next to 9.3.3.
+- `@types/node` 26 major deferred.
 - Empty-track flag clear edge deferred behind auth/rules and package cleanup.
 - Firestore rules automated test harness deferred as a future test-infra task.
 

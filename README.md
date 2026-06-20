@@ -4,12 +4,12 @@ A free, open-source **Line Rider** clone built with modern web technologies. Dra
 
 **🌐 Live at [Ride.me](https://ride.me)**
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.2.6-black?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2.6-61DAFB?logo=react)](https://react.dev/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2.9-black?logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.7-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0.3-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.2.4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
-[![Zustand](https://img.shields.io/badge/Zustand-5.0.13-443E38?logo=npm)](https://zustand-demo.pmnd.rs/)
-[![Firebase](https://img.shields.io/badge/Firebase-12.13.0-FFCA28?logo=firebase)](https://firebase.google.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3.1-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
+[![Zustand](https://img.shields.io/badge/Zustand-5.0.14-443E38?logo=npm)](https://zustand-demo.pmnd.rs/)
+[![Firebase](https://img.shields.io/badge/Firebase-12.15.0-FFCA28?logo=firebase)](https://firebase.google.com/)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 <p align="center">
@@ -310,24 +310,24 @@ ridemeapp/
 
 | Technology                                    | Version | Purpose                         |
 | --------------------------------------------- | ------- | ------------------------------- |
-| [Next.js](https://nextjs.org/)                | 16.2.6  | React framework with App Router |
-| [React](https://react.dev/)                   | 19.2.6  | UI component library            |
+| [Next.js](https://nextjs.org/)                | 16.2.9  | React framework with App Router |
+| [React](https://react.dev/)                   | 19.2.7  | UI component library            |
 | [TypeScript](https://www.typescriptlang.org/) | 6.0.3   | Type-safe JavaScript            |
-| [Zustand](https://zustand-demo.pmnd.rs/)      | 5.0.13  | Lightweight state management    |
-| [Firebase](https://firebase.google.com/)      | 12.13.0 | Authentication & database       |
-| [Tailwind CSS](https://tailwindcss.com/)      | 4.2.4   | Utility-first CSS framework     |
+| [Zustand](https://zustand-demo.pmnd.rs/)      | 5.0.14  | Lightweight state management    |
+| [Firebase](https://firebase.google.com/)      | 12.15.0 | Authentication & database       |
+| [Tailwind CSS](https://tailwindcss.com/)      | 4.3.1   | Utility-first CSS framework     |
 | [PostCSS](https://postcss.org/)               | 8.x     | CSS transformation pipeline     |
-| [ESLint](https://eslint.org/)                 | 10.4.0  | Code linting (flat config)      |
+| [ESLint](https://eslint.org/)                 | 10.5.0  | Code linting (flat config)      |
 
 ### Development Dependencies
 
 | Package                | Version | Purpose                      |
 | ---------------------- | ------- | ---------------------------- |
-| `@tailwindcss/postcss` | 4.3.0   | Tailwind PostCSS plugin      |
-| `@types/node`          | 25.9.1  | Node.js type definitions     |
-| `@types/react`         | 19.2.15 | React type definitions       |
+| `@tailwindcss/postcss` | 4.3.1   | Tailwind PostCSS plugin      |
+| `@types/node`          | 25.9.4  | Node.js type definitions     |
+| `@types/react`         | 19.2.17 | React type definitions       |
 | `@types/react-dom`     | 19.2.3  | React DOM type definitions   |
-| `eslint-config-next`   | 16.2.6  | Next.js ESLint configuration |
+| `eslint-config-next`   | 16.2.9  | Next.js ESLint configuration |
 
 ---
 
