@@ -11,24 +11,23 @@
 
 ## Current State
 
-- Phase: Preflight and Repo Docs
-- Task: T-001
-- Status: Checkpoint ready
-- Last command: npm run lint
-- Last result: Passed
-- Last pushed commit: pending preflight docs checkpoint
-- Branch sync: local dev matched origin/dev before run reports were created; dry-run push succeeded
-- Working tree: dirty with owned preflight docs/run reports
-- Next action: Inspect diff, commit preflight docs/report checkpoint, dry-run push, push, fetch, confirm sync
+- Phase: Baseline Validation
+- Task: T-002
+- Status: Report ready
+- Last command: npm audit --audit-level=moderate
+- Last result: Baseline checks passed; dependency advisories reported and queued
+- Last pushed commit: `40bf3014b891237eb5c65824756186ae37fa09da`
+- Branch sync: local dev matched origin/dev before baseline report update
+- Working tree: dirty with owned baseline report/run-state/task-queue updates
+- Next action: Inspect diff, commit baseline report, dry-run push, push, fetch, confirm sync
 
 ## Dirty File Classification
 
 | Path | Classification | Owner/Reason |
 | --- | --- | --- |
-| `agent-runs/2026-06-20-codebase-pass/*` | Safe-to-commit | Created by this codebase-improvement run |
-| `AGENTS.md` | Safe-to-commit | Evidence-backed testing/docs drift correction |
-| `spec.md` | Safe-to-commit | Evidence-backed current-state correction; roadmap preserved |
-| `README.md` | Safe-to-commit | Evidence-backed setup/version/control drift correction |
+| `agent-runs/2026-06-20-codebase-pass/02-baseline-validation.md` | Safe-to-commit | Baseline validation report |
+| `agent-runs/2026-06-20-codebase-pass/run-state.md` | Safe-to-commit | Run ledger update |
+| `agent-runs/2026-06-20-codebase-pass/task-queue.md` | Safe-to-commit | Queue status update |
 
 ## Blockers
 
@@ -36,7 +35,7 @@
 
 ## Deferred Items
 
-- None.
+- Package drift/advisories deferred to Package and Dead-Code Cleanup phase.
 
 ## Skill Improvement Notes
 
