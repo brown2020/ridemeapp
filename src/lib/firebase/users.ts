@@ -85,8 +85,8 @@ export async function getUserProfile(
 
 /**
  * Create or update a user profile from Firebase Auth user.
- * Uses setDoc with merge to avoid race conditions between concurrent
- * onAuthStateChanged callbacks (no read-then-write needed).
+ * Reads once so create writes include the complete schema required by
+ * Firestore rules without overwriting existing profile choices on refresh.
  */
 export async function createOrUpdateUserProfile(
   user: User,
@@ -95,13 +95,38 @@ export async function createOrUpdateUserProfile(
   const db = getFirebaseDb();
   const docRef = doc(db, USERS_COLLECTION, user.uid);
 
+  const existingSnap = await getDoc(docRef);
+  const existingData = existingSnap.exists() ? existingSnap.data() : null;
+
   const profileData: Record<string, unknown> = {
     uid: user.uid,
     email: user.email,
     updatedAt: serverTimestamp(),
   };
 
-  // Set displayName/photoURL from additional data or fall back to auth provider
+  if (!existingData) {
+    profileData.createdAt = serverTimestamp();
+    profileData.displayName =
+      additionalData?.displayName ?? user.displayName ?? null;
+    profileData.photoURL = additionalData?.photoURL ?? user.photoURL ?? null;
+    profileData.character = additionalData?.character ?? "ball";
+  } else {
+    if (!existingData.createdAt) {
+      profileData.createdAt = serverTimestamp();
+    }
+    if (existingData.displayName === undefined) {
+      profileData.displayName = null;
+    }
+    if (existingData.photoURL === undefined) {
+      profileData.photoURL = null;
+    }
+    if (!existingData.character) {
+      profileData.character = additionalData?.character ?? "ball";
+    }
+  }
+
+  // Set displayName/photoURL from additional data or fall back to auth provider.
+  // Existing values are preserved when neither source supplies a replacement.
   if (additionalData?.displayName) {
     profileData.displayName = additionalData.displayName;
   } else if (user.displayName) {
@@ -118,8 +143,8 @@ export async function createOrUpdateUserProfile(
     profileData.character = additionalData.character;
   }
 
-  // merge: true creates the doc if missing, or merges fields if it exists.
-  // This eliminates the read-then-write race condition.
+  // merge: true keeps existing profile fields while allowing create payloads to
+  // include the complete schema required by Firestore rules.
   await setDoc(docRef, profileData, { merge: true });
 
   // Read back to get the complete profile (including createdAt, character defaults)

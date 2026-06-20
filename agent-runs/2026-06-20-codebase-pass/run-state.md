@@ -11,21 +11,23 @@
 
 ## Current State
 
-- Phase: Findings Backlog
-- Task: T-003
-- Status: Report ready
-- Last command: findings source and dependency search
-- Last result: F-001/F-002 selected for execution; package advisories queued for cleanup
-- Last pushed commit: `e688bba2ce63f2754be2da8e7f9a46a50692f734`
-- Branch sync: local dev matched origin/dev before findings report update
-- Working tree: dirty with owned findings report/run-state/task-queue updates
-- Next action: Run lint, inspect diff, commit findings backlog, dry-run push, push, fetch, confirm sync
+- Phase: Execute Fixes and Improvements
+- Task: T-004
+- Status: Fix ready
+- Last command: npm run build
+- Last result: Passed after auth/rules fix
+- Last pushed commit: `965673ae16da5444e7c8efbdc178efb92b64f45e`
+- Branch sync: local dev matched origin/dev before source edits
+- Working tree: dirty with owned auth/rules fix and execution report updates
+- Next action: Run lint after report update, inspect diff, commit fix, dry-run push, push, fetch, confirm sync
 
 ## Dirty File Classification
 
 | Path | Classification | Owner/Reason |
 | --- | --- | --- |
-| `agent-runs/2026-06-20-codebase-pass/03-findings-backlog.md` | Safe-to-commit | Findings backlog report |
+| `src/lib/firebase/users.ts` | In-scope source | F-001 profile create/rules alignment |
+| `firestore.rules` | In-scope security rules | F-002 strict profile/track document shape |
+| `agent-runs/2026-06-20-codebase-pass/04-execute-fixes-and-improvements.md` | Safe-to-commit | Execution report |
 | `agent-runs/2026-06-20-codebase-pass/run-state.md` | Safe-to-commit | Run ledger update |
 | `agent-runs/2026-06-20-codebase-pass/task-queue.md` | Safe-to-commit | Queue status update |
 
