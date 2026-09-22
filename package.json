@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
-    "test:ci": "CI=true vitest run"
+    "test:ci": "CI=true vitest run",
+    "typecheck": "tsc --noEmit",
+    "doctor": "npx -y react-doctor@latest . --verbose --yes"
   },
   "dependencies": {
     "firebase": "^12.15.0",

@@ -1,7 +1,6 @@
 "use client";
 
-import { useId, useState, useEffect, useRef, type FormEvent } from "react";
-import { createPortal } from "react-dom";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import type { UseAuthReturn } from "@/hooks/use-auth";
 import { Avatar } from "./avatar";
 import { CharacterSelector } from "./character-selector";
@@ -9,7 +8,7 @@ import type { CharacterType } from "@/lib/linerider/characters";
 import { useAuthStore } from "@/stores/auth-store";
 import { useLineriderStore } from "@/stores/linerider-store";
 import { X } from "lucide-react";
-import { useModalA11y } from "@/hooks/use-modal-a11y";
+import { ModalDialog } from "@/components/ui/modal-dialog";
 
 interface ProfileModalProps {
   auth: UseAuthReturn;
@@ -17,29 +16,17 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ auth, onClose }: ProfileModalProps) {
-  const titleId = useId();
   const [displayName, setDisplayName] = useState(
     auth.profile?.displayName || ""
   );
   const [saved, setSaved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
   const isBusy = auth.isLoading || isSubmitting;
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const character = useLineriderStore((s) => s.character);
   const setStoreCharacter = useLineriderStore((s) => s.setCharacter);
 
-  // Stable reference to onClose to avoid effect churn
-  const onCloseRef = useRef(onClose);
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-
-  // Modal accessibility (Escape key, focus trap, focus restoration)
-  useModalA11y({ containerRef: modalRef, onClose, isOpen: true });
-
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
@@ -49,9 +36,8 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
     };
   }, []);
 
-  // Handler to update both local state AND the game store immediately
   const handleCharacterSelect = (newCharacter: CharacterType) => {
-    setStoreCharacter(newCharacter); // Update game immediately
+    setStoreCharacter(newCharacter);
   };
 
   const handleSubmit = async (e: FormEvent) => {
@@ -61,17 +47,10 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
     setIsSubmitting(true);
     try {
       await auth.updateProfile(displayName, character);
-
-      // Only show success if no error occurred
       const { error } = useAuthStore.getState();
       if (!error) {
         setSaved(true);
-
-        // Clear any existing timeout before starting a new one
-        if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-        }
-
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
         timeoutRef.current = setTimeout(() => {
           setSaved(false);
           timeoutRef.current = null;
@@ -82,128 +61,103 @@ export function ProfileModal({ auth, onClose }: ProfileModalProps) {
     }
   };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onCloseRef.current();
-    }
-  };
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-modal overflow-y-auto bg-black/40 backdrop-blur-sm"
-      onClick={handleBackdropClick}
-      role="presentation"
-    >
-      <div className="min-h-full px-4 py-12">
-        <div
-          ref={modalRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          tabIndex={-1}
-          className="relative mx-auto w-full max-w-md rounded-xl bg-white p-6 shadow-2xl"
+  return (
+    <ModalDialog open title="Your Profile" onClose={onClose}>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-0 top-0 rounded-md p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+          aria-label="Close"
         >
-          {/* Close button */}
-          <button
-            onClick={() => onCloseRef.current()}
-            className="absolute right-4 top-4 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-            aria-label="Close"
+          <X className="h-5 w-5" />
+        </button>
+
+        <h2 className="mb-6 text-2xl font-bold text-slate-900">Your Profile</h2>
+
+        {auth.error ? (
+          <div
+            className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
+            role="alert"
+            aria-live="polite"
           >
-            <X className="h-5 w-5" />
-          </button>
-
-          <h2 id={titleId} className="mb-6 text-2xl font-bold text-slate-900">
-            Your Profile
-          </h2>
-
-          {/* Error message */}
-          {auth.error && (
-            <div
-              className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700"
-              role="alert"
-              aria-live="polite"
+            {auth.error.message}
+            <button
+              type="button"
+              onClick={auth.clearError}
+              className="ml-2 font-medium underline hover:no-underline"
             >
-              {auth.error.message}
-              <button
-                onClick={auth.clearError}
-                className="ml-2 font-medium underline hover:no-underline"
-              >
-                Dismiss
-              </button>
-            </div>
-          )}
-
-          {/* Success message */}
-          {saved && (
-            <div
-              className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700"
-              role="status"
-              aria-live="polite"
-            >
-              ✓ Profile saved successfully!
-            </div>
-          )}
-
-          {/* User info */}
-          <div className="mb-6 flex items-center gap-4">
-            <Avatar
-              photoURL={auth.profile?.photoURL || auth.user?.photoURL}
-              displayName={auth.profile?.displayName || auth.user?.displayName}
-              email={auth.user?.email}
-              size="lg"
-            />
-            <div>
-              <p className="text-sm text-slate-500">Signed in as</p>
-              <p className="font-medium text-slate-900">{auth.user?.email}</p>
-            </div>
+              Dismiss
+            </button>
           </div>
+        ) : null}
 
-          {/* Profile form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label
-                htmlFor="displayName"
-                className="mb-1 block text-sm font-medium text-slate-700"
-              >
-                Display Name
-              </label>
-              <input
-                id="displayName"
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                maxLength={50}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                placeholder="Your name"
-              />
-            </div>
+        {saved ? (
+          <div
+            className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-700"
+            role="status"
+            aria-live="polite"
+          >
+            ✓ Profile saved successfully!
+          </div>
+        ) : null}
 
-            {/* Character selector */}
-            <CharacterSelector
-              selectedCharacter={character}
-              onSelect={handleCharacterSelect}
-            />
-
-            <button
-              type="submit"
-              disabled={isBusy}
-              className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
-            >
-              {auth.isLoading ? "Saving..." : "Save Profile"}
-            </button>
-          </form>
-
-          <div className="mt-6 border-t border-slate-200 pt-6">
-            <button
-              onClick={auth.signOut}
-              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
-            >
-              Sign Out
-            </button>
+        <div className="mb-6 flex items-center gap-4">
+          <Avatar
+            photoURL={auth.profile?.photoURL || auth.user?.photoURL}
+            displayName={auth.profile?.displayName || auth.user?.displayName}
+            email={auth.user?.email}
+            size="lg"
+          />
+          <div>
+            <p className="text-sm text-slate-500">Signed in as</p>
+            <p className="font-medium text-slate-900">{auth.user?.email}</p>
           </div>
         </div>
+
+        <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4">
+          <div>
+            <label
+              htmlFor="displayName"
+              className="mb-1 block text-sm font-medium text-slate-700"
+            >
+              Display Name
+            </label>
+            <input
+              id="displayName"
+              type="text"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              maxLength={50}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="Your name"
+            />
+          </div>
+
+          <CharacterSelector
+            selectedCharacter={character}
+            onSelect={handleCharacterSelect}
+          />
+
+          <button
+            type="submit"
+            disabled={isBusy}
+            className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+          >
+            {auth.isLoading ? "Saving..." : "Save Profile"}
+          </button>
+        </form>
+
+        <div className="mt-6 border-t border-slate-200 pt-6">
+          <button
+            type="button"
+            onClick={() => void auth.signOut()}
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            Sign Out
+          </button>
+        </div>
       </div>
-    </div>,
-    document.body
+    </ModalDialog>
   );
 }

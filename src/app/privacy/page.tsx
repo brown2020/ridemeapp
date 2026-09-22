@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LegalDocument } from "@/components/legal/legal-document";
 
 export const metadata = {
   title: "Privacy Policy - Ride.me",
@@ -7,20 +7,8 @@ export const metadata = {
 
 export default function PrivacyPolicy() {
   return (
-    <main className="min-h-dvh bg-white px-4 py-12">
-      <div className="mx-auto max-w-2xl">
-        <Link
-          href="/"
-          className="mb-8 inline-block text-sm text-slate-500 hover:text-slate-700"
-        >
-          &larr; Back to Ride.me
-        </Link>
+    <LegalDocument title="Privacy Policy">
 
-        <h1 className="mb-8 text-3xl font-bold text-slate-900">
-          Privacy Policy
-        </h1>
-
-        <div className="prose prose-slate">
           <p className="text-slate-600">
             <strong>Last updated:</strong> February 6, 2026
           </p>
@@ -74,8 +62,7 @@ export default function PrivacyPolicy() {
             For questions about this privacy policy, please open an issue on our
             GitHub repository.
           </p>
-        </div>
-      </div>
-    </main>
+
+    </LegalDocument>
   );
 }

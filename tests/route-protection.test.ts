@@ -37,7 +37,7 @@ describe("route protection (Next.js App Router)", () => {
 
   it("exposes only static app routes (no protected segments)", () => {
     const routes = collectAppRoutes(path.join(repoRoot, "src/app"), "");
-    expect(routes.sort()).toEqual(["/", "/privacy", "/terms"]);
+    expect(routes.sort()).toEqual(["/", "/forgot-password", "/login", "/privacy", "/signup", "/terms"]);
   });
 
   it("documents client-only Firebase auth (no server session gate)", () => {

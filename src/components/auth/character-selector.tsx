@@ -116,11 +116,11 @@ export function CharacterSelector({
   onSelect,
 }: CharacterSelectorProps) {
   return (
-    <div className="space-y-3">
-      <label className="block text-sm font-medium text-slate-700">
+    <div className="space-y-3" role="group" aria-labelledby="character-selector-label">
+      <p id="character-selector-label" className="block text-sm font-medium text-slate-700">
         Choose Your Character
-      </label>
-      <div className="grid grid-cols-4 gap-2">
+      </p>
+      <div className="grid grid-cols-4 gap-2" role="listbox" aria-labelledby="character-selector-label">
         {CHARACTER_TYPES.map((character) => (
           <CharacterPreview
             key={character}

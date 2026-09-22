@@ -12,6 +12,8 @@ export {
   signOut,
   onAuthChange,
   EmailRequiredError,
+  sendPasswordReset,
+  getAuthErrorMessage,
 } from "./auth";
 
 // User profile functions

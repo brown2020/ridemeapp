@@ -7,6 +7,7 @@ import {
   isSignInWithEmailLink,
   signInWithEmailLink,
   signOut as firebaseSignOut,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   onAuthStateChanged,
   type User,
   type ActionCodeSettings,
@@ -150,3 +151,45 @@ export function onAuthChange(
   return onAuthStateChanged(auth, callback);
 }
 
+/**
+ * Send a password reset email
+ */
+export async function sendPasswordReset(email: string): Promise<void> {
+  const auth = getFirebaseAuth();
+  await firebaseSendPasswordResetEmail(auth, email);
+}
+
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  "auth/invalid-credential": "Invalid email or password. Please try again.",
+  "auth/user-not-found": "No account found with this email address.",
+  "auth/wrong-password": "Incorrect password. Please try again.",
+  "auth/email-already-in-use": "An account with this email already exists.",
+  "auth/too-many-requests":
+    "Too many attempts. Please wait a moment and try again.",
+  "auth/weak-password": "Password must be at least 6 characters.",
+  "auth/invalid-email": "Please enter a valid email address.",
+  "auth/network-request-failed":
+    "Network error. Please check your connection.",
+  "auth/popup-closed-by-user": "Sign-in was cancelled.",
+  "auth/user-disabled": "This account has been disabled.",
+  "auth/expired-action-code":
+    "This sign-in link has expired. Please request a new one.",
+  "auth/invalid-action-code":
+    "This sign-in link is invalid or has already been used.",
+  "auth/missing-email": "Please enter your email address.",
+};
+
+/**
+ * Map Firebase Auth errors to user-friendly copy (no raw auth/* overlays).
+ */
+export function getAuthErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const code = (error as { code?: string }).code;
+    if (code && code in AUTH_ERROR_MESSAGES) {
+      return AUTH_ERROR_MESSAGES[code];
+    }
+    return error.message || "Something went wrong. Please try again.";
+  }
+  if (typeof error === "string") return error;
+  return "Something went wrong. Please try again.";
+}

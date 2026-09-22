@@ -1,7 +1,12 @@
-export { AuthModal } from "./auth-modal";
 export { Avatar } from "./avatar";
 export { CharacterSelector } from "./character-selector";
 export { EmailConfirmModal } from "./email-confirm-modal";
 export { ProfileModal } from "./profile-modal";
 export { UserMenu } from "./user-menu";
 export { MyTracksModal } from "./my-tracks-modal";
+export { AuthShell } from "./auth-shell";
+export { LoginForm } from "./login-form";
+export { SignUpForm } from "./signup-form";
+export { ForgotPasswordForm } from "./forgot-password-form";
+export { PasswordField } from "./password-field";
+export { GoogleSignInButton } from "./google-sign-in-button";
