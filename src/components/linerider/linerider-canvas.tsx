@@ -9,6 +9,7 @@ export function LineriderCanvas() {
   return (
     <canvas
       ref={canvasRef}
+      tabIndex={-1}
       className={className}
       style={style}
       onContextMenu={onContextMenu}

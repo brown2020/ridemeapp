@@ -3,7 +3,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLineriderStore, getRiderVelocity } from "@/stores/linerider-store";
 import type { Viewport } from "@/lib/linerider/types";
-import { sub, len, v, snapLineEndpoint, type Vec2 } from "@/lib/linerider/math";
+import { sub, len, v, snapLineEndpoint, type Segment, type Vec2 } from "@/lib/linerider/math";
+import { planFrameSchedule } from "@/lib/linerider/frame-scheduler";
+import {
+  isCanvasOverviewTarget,
+  shouldPlaceRiderStart,
+} from "@/lib/linerider/input-gestures";
 import { screenToWorld } from "@/lib/linerider/transform";
 import { computeTrackOverviewCamera } from "@/lib/linerider/track-bounds";
 import type { Camera } from "@/lib/linerider/types";
@@ -41,9 +46,11 @@ export function useLineriderCanvasEngine() {
   const lineStartRef = useRef<Vec2 | null>(null);
   const linePlacingRef = useRef<boolean>(false);
   const isInteractingRef = useRef<boolean>(false);
+  const eraseBeforeRef = useRef<Segment[] | null>(null);
 
   // Animation state
   const rafRef = useRef<number | null>(null);
+  const insideFrameRef = useRef(false);
   const lastFrameMsRef = useRef<number>(0);
   const accumulatorRef = useRef<number>(0);
 
@@ -96,6 +103,9 @@ export function useLineriderCanvasEngine() {
         return;
       }
       rafRef.current = null;
+      insideFrameRef.current = true;
+      let continueLoop = false;
+      try {
 
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -227,11 +237,14 @@ export function useLineriderCanvasEngine() {
 
       // Continue animation loop if playing or interacting
       const freshState = useLineriderStore.getState();
-      if (
+      continueLoop =
         freshState.isPlaying ||
         isInteractingRef.current ||
-        linePlacingRef.current
-      ) {
+        linePlacingRef.current;
+      } finally {
+        insideFrameRef.current = false;
+      }
+      if (mounted && continueLoop) {
         rafRef.current = requestAnimationFrame(renderLoop);
       }
     }
@@ -293,12 +306,16 @@ export function useLineriderCanvasEngine() {
 
     function requestRender() {
       needsRenderRef.current = true;
-      // Start animation loop if not already running
-      if (rafRef.current === null) {
+      const plan = planFrameSchedule({
+        insideFrame: insideFrameRef.current,
+        hasQueuedFrame: rafRef.current !== null,
+      });
+      if (plan.action !== "queue") return;
+      if (plan.resetClock) {
         lastFrameMsRef.current = 0;
         accumulatorRef.current = PHYSICS_DT;
-        rafRef.current = requestAnimationFrame(renderLoop);
       }
+      rafRef.current = requestAnimationFrame(renderLoop);
     }
 
     // Pointer event handlers
@@ -308,6 +325,8 @@ export function useLineriderCanvasEngine() {
 
       const viewport = viewportRef.current;
       const state = useLineriderStore.getState();
+
+      canvas.focus({ preventScroll: true });
 
       const screen = screenFromEvent(e, canvas);
       const world = screenToWorld(screen, state.camera, viewport);
@@ -323,8 +342,8 @@ export function useLineriderCanvasEngine() {
         return;
       }
 
-      // Shift+click sets rider start position
-      if (e.shiftKey) {
+      // Shift+click sets rider start. A line waiting for its end point uses Shift to snap.
+      if (shouldPlaceRiderStart(e.shiftKey, linePlacingRef.current)) {
         state.setRiderStart(world);
         return;
       }
@@ -359,8 +378,8 @@ export function useLineriderCanvasEngine() {
         strokeSegmentsRef.current = [];
       } else {
         pointerModeRef.current = "erase";
+        eraseBeforeRef.current = state.segments;
         const eraseRadius = 15 / state.camera.zoom;
-        state.pushHistory();
         state.eraseAt(world, eraseRadius, { recordHistory: false });
       }
 
@@ -461,6 +480,11 @@ export function useLineriderCanvasEngine() {
           state.addSegments(stroke);
         }
       }
+
+      if (mode === "erase" && eraseBeforeRef.current) {
+        state.commitEraseStroke(eraseBeforeRef.current);
+        eraseBeforeRef.current = null;
+      }
       // Line tool commits on second click (pointer down), not pointer up
       // Erase mode: already handled in real-time during drag
 
@@ -475,6 +499,7 @@ export function useLineriderCanvasEngine() {
       if (isEditableTarget(e.target)) return;
 
       if (e.key === "Tab") {
+        if (!isCanvasOverviewTarget(e.target, canvasRef.current)) return;
         e.preventDefault();
         enterTrackOverview();
         return;
@@ -488,10 +513,9 @@ export function useLineriderCanvasEngine() {
     }
 
     function onKeyUp(e: KeyboardEvent) {
-      if (e.key === "Tab") {
-        e.preventDefault();
-        exitTrackOverview();
-      }
+      if (e.key !== "Tab" || !overviewActiveRef.current) return;
+      e.preventDefault();
+      exitTrackOverview();
     }
 
     function onWindowBlur() {
