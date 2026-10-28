@@ -19,6 +19,15 @@ service cloud.firestore {
         return request.resource.data.uid == uid;
       }
 
+      function isSafePhotoUrl(url) {
+        return url == null || (
+          url is string &&
+          url.size() > 0 &&
+          url.size() <= 2048 &&
+          url.matches('https://.+')
+        );
+      }
+
       // Validate user profile schema
       function isValidProfile() {
         let data = request.resource.data;
@@ -27,7 +36,7 @@ service cloud.firestore {
                data.uid is string &&
                (data.email == null || data.email is string) &&
                (data.displayName == null || (data.displayName is string && data.displayName.size() <= 50)) &&
-               (data.photoURL == null || data.photoURL is string) &&
+               isSafePhotoUrl(data.photoURL) &&
                data.character in ['ball', 'snowboarder', 'skateboarder', 'horse'] &&
                (data.createdAt == null || data.createdAt is timestamp) &&
                (data.updatedAt == null || data.updatedAt is timestamp);
@@ -48,22 +57,34 @@ service cloud.firestore {
       // ----------------------------------------
       // TRACKS SUBCOLLECTION
       // ----------------------------------------
-      // User's saved tracks: /users/{uid}/tracks/{trackId}
+      // Metadata: /users/{uid}/tracks/{trackId}
+      // Segments: /users/{uid}/tracks/{trackId}/parts/segments
+      // New tracks must use slot-0 … slot-49 so a client cannot create unbounded documents.
+      // Rules cannot loop over segment rows; row shape and coordinate bounds are enforced
+      // when the app encodes and decodes tracks.
       match /tracks/{trackId} {
+        function isTrackSlot() {
+          return trackId.matches('slot-(?:[0-9]|[1-4][0-9])');
+        }
+
+        function isInWorld(value) {
+          return value is number && value >= -1000000 && value <= 1000000;
+        }
+
         function isValidRiderStart(riderStart) {
           return riderStart is map &&
                  riderStart.keys().hasAll(['x', 'y']) &&
-                 riderStart.x is number &&
-                 riderStart.y is number;
+                 riderStart.keys().hasOnly(['x', 'y']) &&
+                 isInWorld(riderStart.x) &&
+                 isInWorld(riderStart.y);
         }
 
-        function isValidTrack() {
+        function isValidTrackMeta() {
           let data = request.resource.data;
           return data.keys().hasAll([
                    'name',
                    'version',
                    'segmentCount',
-                   'segments',
                    'riderStart',
                    'character',
                    'updatedAt'
@@ -72,7 +93,6 @@ service cloud.firestore {
                    'name',
                    'version',
                    'segmentCount',
-                   'segments',
                    'riderStart',
                    'character',
                    'createdAt',
@@ -84,10 +104,7 @@ service cloud.firestore {
                  data.version == 1 &&
                  data.segmentCount is int &&
                  data.segmentCount >= 0 &&
-                 data.segmentCount <= 50000 &&
-                 data.segments is list &&
-                 data.segments.size() <= 50000 &&
-                 data.segmentCount == data.segments.size() &&
+                 data.segmentCount <= 12000 &&
                  isValidRiderStart(data.riderStart) &&
                  data.character in ['ball', 'snowboarder', 'skateboarder', 'horse'] &&
                  (data.createdAt == null || data.createdAt is timestamp) &&
@@ -95,27 +112,33 @@ service cloud.firestore {
         }
 
         allow read: if isOwner();
-        allow create: if isOwner() && isValidTrack();
-        allow update: if isOwner() && isValidTrack();
+        allow create: if isOwner() && isTrackSlot() && isValidTrackMeta();
+        allow update: if isOwner() && isValidTrackMeta();
         allow delete: if isOwner();
-      }
-      
-      // ----------------------------------------
-      // SETTINGS SUBCOLLECTION
-      // ----------------------------------------
-      // User preferences: /users/{uid}/settings/{settingId}
-      match /settings/{settingId} {
-        allow read: if isOwner();
-        allow write: if isOwner()
-                     && request.resource.data.keys().size() <= 20;
+
+        match /parts/{partId} {
+          function isValidSegmentsPart() {
+            let data = request.resource.data;
+            let parentPath = /databases/$(database)/documents/users/$(uid)/tracks/$(trackId);
+            return partId == 'segments' &&
+                   data.keys().hasOnly(['segments']) &&
+                   data.segments is list &&
+                   data.segments.size() <= 12000 &&
+                   data.segments.size() == getAfter(parentPath).data.segmentCount;
+          }
+
+          allow read: if isOwner();
+          allow create, update: if isOwner() && isValidSegmentsPart();
+          allow delete: if isOwner();
+        }
       }
     }
     
     // ============================================
     // DENY ALL OTHER ACCESS
     // ============================================
-    // Any path not explicitly matched above is denied by default
-    // This is the default Firestore behavior, but making it explicit
+    // Any path not explicitly matched above is denied by default.
+    // /users/{uid}/settings is intentionally not writable.
     
   }
 }
