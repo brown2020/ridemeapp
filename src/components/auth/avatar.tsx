@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { isSafePhotoUrl } from "@/lib/firebase/photo-url";
 
 interface AvatarProps {
   /** Photo URL from profile or auth provider */
@@ -43,8 +44,10 @@ export function Avatar({
     email?.charAt(0)?.toUpperCase() ||
     "?";
 
+  const safePhotoUrl = isSafePhotoUrl(photoURL) ? photoURL : null;
+
   // Show fallback if no URL or image failed to load
-  if (!photoURL || imageError) {
+  if (!safePhotoUrl || imageError) {
     return (
       <div
         className={`flex items-center justify-center rounded-full bg-blue-100 font-bold text-blue-600 ${sizeClasses[size]} ${className}`}
@@ -56,7 +59,7 @@ export function Avatar({
 
   return (
     <Image
-      src={photoURL}
+      src={safePhotoUrl}
       alt={displayName || "Profile"}
       width={sizePx[size]}
       height={sizePx[size]}

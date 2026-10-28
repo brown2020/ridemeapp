@@ -9,6 +9,7 @@ import {
 import { getFirebaseDb } from "./config";
 import type { User } from "firebase/auth";
 import { CHARACTER_TYPES, type CharacterType } from "@/lib/linerider/characters";
+import { profileIdentityUpdate } from "./profile-fields";
 
 /**
  * User profile stored in Firestore
@@ -106,9 +107,6 @@ export async function createOrUpdateUserProfile(
 
   if (!existingData) {
     profileData.createdAt = serverTimestamp();
-    profileData.displayName =
-      additionalData?.displayName ?? user.displayName ?? null;
-    profileData.photoURL = additionalData?.photoURL ?? user.photoURL ?? null;
     profileData.character = additionalData?.character ?? "ball";
   } else {
     if (!existingData.createdAt) {
@@ -125,18 +123,17 @@ export async function createOrUpdateUserProfile(
     }
   }
 
-  // Set displayName/photoURL from additional data or fall back to auth provider.
-  // Existing values are preserved when neither source supplies a replacement.
-  if (additionalData?.displayName) {
-    profileData.displayName = additionalData.displayName;
-  } else if (user.displayName) {
-    profileData.displayName = user.displayName;
+  const identity = profileIdentityUpdate({
+    isNewProfile: !existingData,
+    additional: additionalData,
+    authDisplayName: user.displayName,
+    authPhotoURL: user.photoURL,
+  });
+  if ("displayName" in identity) {
+    profileData.displayName = identity.displayName ?? null;
   }
-
-  if (additionalData?.photoURL) {
-    profileData.photoURL = additionalData.photoURL;
-  } else if (user.photoURL) {
-    profileData.photoURL = user.photoURL;
+  if ("photoURL" in identity) {
+    profileData.photoURL = identity.photoURL ?? null;
   }
 
   if (additionalData?.character) {

@@ -7,6 +7,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  void error;
   return (
     <main className="grid min-h-dvh place-items-center bg-white text-black">
       <div className="text-center px-4">
@@ -15,7 +16,7 @@ export default function GlobalError({
         </div>
         <h1 className="mt-1 text-2xl font-semibold">Unexpected Error</h1>
         <p className="mt-2 max-w-md text-sm text-black/70">
-          {error.message || "An unexpected error occurred."}
+          Something went wrong. Please try again.
         </p>
         <button
           onClick={reset}
