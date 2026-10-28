@@ -1,6 +1,8 @@
 import path from "node:path";
 import { defineConfig } from "vitest/config";
 
+const root = import.meta.dirname;
+
 export default defineConfig({
   test: {
     environment: "node",
@@ -9,7 +11,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(root, "./src"),
     },
   },
 });
