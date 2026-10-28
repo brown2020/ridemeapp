@@ -53,9 +53,13 @@ export function CloudTrackList({
               <button
                 type="button"
                 onClick={() => onLoad(track.id)}
-                disabled={loadingTrackId !== null}
+                disabled={loadingTrackId !== null || track.unreadable === true}
                 className="rounded-md p-2 text-slate-600 hover:bg-slate-100 disabled:opacity-50"
-                aria-label={`Load ${track.name}`}
+                aria-label={
+                  track.unreadable
+                    ? `${track.name} cannot be loaded`
+                    : `Load ${track.name}`
+                }
               >
                 {loadingTrackId === track.id ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

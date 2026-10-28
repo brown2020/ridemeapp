@@ -2,7 +2,7 @@ import type { Segment, Vec2, LineType } from "./math";
 import type { CharacterType } from "./characters";
 import { CHARACTER_TYPES } from "./characters";
 import type { TrackFileV1 } from "./track-file";
-import { MAX_TRACK_SEGMENTS } from "./track-file";
+import { isTrackCoordinate, MAX_TRACK_SEGMENTS } from "./track-file";
 
 /** Compact row: [ax, ay, bx, by, typeIndex] */
 export type EncodedSegmentRow = [number, number, number, number, number];
@@ -37,15 +37,11 @@ export function decodeSegments(
     if (!Array.isArray(row) || row.length !== 5) return null;
     const [ax, ay, bx, by, typeIndex] = row;
     if (
-      typeof ax !== "number" ||
-      typeof ay !== "number" ||
-      typeof bx !== "number" ||
-      typeof by !== "number" ||
+      !isTrackCoordinate(ax) ||
+      !isTrackCoordinate(ay) ||
+      !isTrackCoordinate(bx) ||
+      !isTrackCoordinate(by) ||
       typeof typeIndex !== "number" ||
-      !Number.isFinite(ax) ||
-      !Number.isFinite(ay) ||
-      !Number.isFinite(bx) ||
-      !Number.isFinite(by) ||
       !Number.isInteger(typeIndex) ||
       typeIndex < 0 ||
       typeIndex > 2
@@ -64,12 +60,7 @@ export function decodeSegments(
 export function parseRiderStart(value: unknown): Vec2 | null {
   if (!value || typeof value !== "object") return null;
   const r = value as Record<string, unknown>;
-  if (
-    typeof r.x !== "number" ||
-    typeof r.y !== "number" ||
-    !Number.isFinite(r.x) ||
-    !Number.isFinite(r.y)
-  ) {
+  if (!isTrackCoordinate(r.x) || !isTrackCoordinate(r.y)) {
     return null;
   }
   return { x: r.x, y: r.y };

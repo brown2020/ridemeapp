@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { LineriderCanvas } from "@/components/linerider/linerider-canvas";
 import { LineriderControls } from "@/components/linerider/linerider-controls";
 import { MyTracksModal } from "@/components/auth";
@@ -14,6 +14,7 @@ import {
 
 export function LineriderApp() {
   const auth = useAuth();
+  const appliedProfileUidRef = useRef<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [showMyTracks, setShowMyTracks] = useState(false);
 
@@ -60,14 +61,18 @@ export function LineriderApp() {
     }))
   );
 
-  // Sync character from user profile when profile loads or changes
+  // Apply the saved character once per signed-in user. Later toolbar picks stay put.
   useEffect(() => {
-    if (auth.profile) {
-      // User is logged in and profile is loaded - use their saved character
-      setCharacter(auth.profile.character || "ball");
+    const uid = auth.user?.uid;
+    if (!uid) {
+      appliedProfileUidRef.current = null;
+      return;
     }
-    // If no profile (not logged in), keep the current character selection
-  }, [auth.profile, setCharacter]);
+    const character = auth.profile?.character;
+    if (!character || appliedProfileUidRef.current === uid) return;
+    appliedProfileUidRef.current = uid;
+    setCharacter(character);
+  }, [auth.user?.uid, auth.profile?.character, setCharacter]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {

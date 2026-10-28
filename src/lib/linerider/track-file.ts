@@ -3,7 +3,22 @@ import { CHARACTER_TYPES, type CharacterType } from "./characters";
 
 export const TRACK_FILE_VERSION = 1 as const;
 export const MAX_TRACK_NAME_LENGTH = 100;
-export const MAX_TRACK_SEGMENTS = 50_000;
+/**
+ * Five doubles per segment stay under Firestore's 1 MiB document limit.
+ * 12_000 * 5 * 8 bytes = 480 KB before document overhead.
+ */
+export const MAX_TRACK_SEGMENTS = 12_000;
+/** Playable world, with margin past the out-of-bounds pause distance. */
+export const MAX_ABS_TRACK_COORD = 1_000_000;
+export const MAX_TRACK_FILE_BYTES = 2_000_000;
+
+export function isTrackCoordinate(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    Math.abs(value) <= MAX_ABS_TRACK_COORD
+  );
+}
 
 const LINE_TYPES: readonly LineType[] = ["normal", "accel", "scenery"];
 
@@ -30,7 +45,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isFiniteNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value);
+  return isTrackCoordinate(value);
 }
 
 function parseVec2(value: unknown): Vec2 | null {

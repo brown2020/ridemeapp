@@ -3,8 +3,8 @@ import {
   doc,
   getDoc,
   getDocs,
-  setDoc,
-  deleteDoc,
+  writeBatch,
+  runTransaction,
   query,
   orderBy,
   limit,
@@ -15,21 +15,42 @@ import { getFirebaseDb } from "./config";
 import type { Segment, Vec2 } from "@/lib/linerider/math";
 import type { CharacterType } from "@/lib/linerider/characters";
 import type { TrackFileV1 } from "@/lib/linerider/track-file";
-import { TRACK_FILE_VERSION, MAX_TRACK_NAME_LENGTH } from "@/lib/linerider/track-file";
+import {
+  isTrackCoordinate,
+  TRACK_FILE_VERSION,
+  MAX_TRACK_NAME_LENGTH,
+  MAX_TRACK_SEGMENTS,
+} from "@/lib/linerider/track-file";
 import {
   decodeSegments,
   encodeSegments,
   parseCloudCharacter,
   parseRiderStart,
 } from "@/lib/linerider/track-encoding";
+import {
+  firstFreeTrackSlot,
+  MAX_USER_TRACKS,
+} from "./track-slots";
 
-export const MAX_USER_TRACKS = 50;
+export { MAX_USER_TRACKS };
+
+/** JSON length ceiling so the segments document stays under Firestore's 1 MiB limit. */
+export const MAX_CLOUD_TRACK_JSON_BYTES = 900_000;
+
+export class TrackClientError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TrackClientError";
+  }
+}
 
 export type CloudTrackSummary = Readonly<{
   id: string;
   name: string;
   segmentCount: number;
   updatedAt: Date | null;
+  /** Present when the document cannot be loaded; the row can still be deleted. */
+  unreadable?: boolean;
 }>;
 
 export type CloudTrackDocument = Readonly<{
@@ -52,22 +73,95 @@ function normalizeTrackName(name: string): string {
   return trimmed.length > 0 ? trimmed : "Untitled Track";
 }
 
-function buildTrackPayload(
+function assertSegmentsSavable(segments: readonly Segment[]) {
+  if (segments.length > MAX_TRACK_SEGMENTS) {
+    throw new TrackClientError(
+      `Tracks can include at most ${MAX_TRACK_SEGMENTS} lines.`
+    );
+  }
+  for (const seg of segments) {
+    if (
+      !isTrackCoordinate(seg.a.x) ||
+      !isTrackCoordinate(seg.a.y) ||
+      !isTrackCoordinate(seg.b.x) ||
+      !isTrackCoordinate(seg.b.y)
+    ) {
+      throw new TrackClientError("A line is too far from the origin to save.");
+    }
+  }
+  const encoded = encodeSegments(segments);
+  if (JSON.stringify(encoded).length > MAX_CLOUD_TRACK_JSON_BYTES) {
+    throw new TrackClientError("Track is too large to save to the cloud.");
+  }
+  return encoded;
+}
+
+function buildTrackWrite(
   name: string,
   segments: readonly Segment[],
   riderStart: Vec2,
   character: CharacterType
 ) {
-  const encoded = encodeSegments(segments);
+  const encoded = assertSegmentsSavable(segments);
   return {
-    name: normalizeTrackName(name),
-    version: TRACK_FILE_VERSION,
-    segmentCount: encoded.length,
-    segments: encoded,
-    riderStart: { x: riderStart.x, y: riderStart.y },
-    character,
-    updatedAt: serverTimestamp(),
+    encoded,
+    meta: {
+      name: normalizeTrackName(name),
+      version: TRACK_FILE_VERSION,
+      segmentCount: encoded.length,
+      riderStart: { x: riderStart.x, y: riderStart.y },
+      character,
+      updatedAt: serverTimestamp(),
+    },
   };
+}
+
+export function toUserTrackMessage(error: unknown, fallback: string): string {
+  return error instanceof TrackClientError ? error.message : fallback;
+}
+
+const UNREADABLE_TRACK_NAME = "Unreadable track";
+
+export function parseTrackSummary(id: string, raw: unknown): CloudTrackSummary {
+  if (!raw || typeof raw !== "object") {
+    return {
+      id,
+      name: UNREADABLE_TRACK_NAME,
+      segmentCount: 0,
+      updatedAt: null,
+      unreadable: true,
+    };
+  }
+  const data = raw as Record<string, unknown>;
+  const name = typeof data.name === "string" ? data.name.trim() : "";
+  const segmentCount =
+    typeof data.segmentCount === "number" && Number.isInteger(data.segmentCount)
+      ? data.segmentCount
+      : null;
+  if (
+    !name ||
+    data.version !== TRACK_FILE_VERSION ||
+    segmentCount === null ||
+    segmentCount < 0 ||
+    segmentCount > MAX_TRACK_SEGMENTS
+  ) {
+    return {
+      id,
+      name: name || UNREADABLE_TRACK_NAME,
+      segmentCount: 0,
+      updatedAt: null,
+      unreadable: true,
+    };
+  }
+  const updatedAtValue = data.updatedAt;
+  const updatedAt =
+    updatedAtValue &&
+    typeof updatedAtValue === "object" &&
+    "toDate" in updatedAtValue &&
+    typeof (updatedAtValue as Timestamp).toDate === "function"
+      ? (updatedAtValue as Timestamp).toDate()
+      : null;
+  return { id, name, segmentCount, updatedAt };
 }
 
 export function parseCloudTrackDocument(
@@ -133,14 +227,7 @@ export async function listUserTracks(uid: string): Promise<CloudTrackSummary[]> 
   const items: CloudTrackSummary[] = [];
 
   for (const docSnap of snap.docs) {
-    const parsed = parseCloudTrackDocument(docSnap.id, docSnap.data());
-    if (!parsed) continue;
-    items.push({
-      id: docSnap.id,
-      name: parsed.name,
-      segmentCount: parsed.segmentCount,
-      updatedAt: parsed.updatedAt?.toDate() ?? null,
-    });
+    items.push(parseTrackSummary(docSnap.id, docSnap.data()));
   }
 
   return items;
@@ -153,7 +240,35 @@ export async function getUserTrack(
   const ref = doc(getFirebaseDb(), "users", uid, "tracks", trackId);
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
-  return parseCloudTrackDocument(snap.id, snap.data());
+  const data = snap.data();
+  let segments: unknown = data.segments;
+  if (!Array.isArray(segments)) {
+    const partSnap = await getDoc(doc(ref, "parts", "segments"));
+    segments = partSnap.exists() ? partSnap.data().segments : undefined;
+  }
+  const parsed = parseCloudTrackDocument(snap.id, { ...data, segments });
+  if (!parsed) {
+    throw new TrackClientError("This track could not be read.");
+  }
+  return parsed;
+}
+
+async function commitTrackWrite(
+  uid: string,
+  trackId: string,
+  name: string,
+  segments: readonly Segment[],
+  riderStart: Vec2,
+  character: CharacterType,
+  createdAt: ReturnType<typeof serverTimestamp> | Timestamp
+): Promise<void> {
+  const { encoded, meta } = buildTrackWrite(name, segments, riderStart, character);
+  const db = getFirebaseDb();
+  const ref = doc(db, "users", uid, "tracks", trackId);
+  const batch = writeBatch(db);
+  batch.set(ref, { ...meta, createdAt });
+  batch.set(doc(ref, "parts", "segments"), { segments: encoded });
+  await batch.commit();
 }
 
 export async function countUserTracks(uid: string): Promise<number> {
@@ -170,17 +285,29 @@ export async function createUserTrack(
   riderStart: Vec2,
   character: CharacterType
 ): Promise<string> {
-  const count = await countUserTracks(uid);
-  if (count >= MAX_USER_TRACKS) {
-    throw new Error(`You can save at most ${MAX_USER_TRACKS} tracks.`);
+  const snap = await getDocs(
+    query(tracksCollection(uid), limit(MAX_USER_TRACKS + 1))
+  );
+  if (snap.size >= MAX_USER_TRACKS) {
+    throw new TrackClientError(`You can save at most ${MAX_USER_TRACKS} tracks.`);
+  }
+  const slot = firstFreeTrackSlot(snap.docs.map((item) => item.id));
+  if (!slot) {
+    throw new TrackClientError(`You can save at most ${MAX_USER_TRACKS} tracks.`);
   }
 
-  const ref = doc(tracksCollection(uid));
-  await setDoc(ref, {
-    ...buildTrackPayload(name, segments, riderStart, character),
-    createdAt: serverTimestamp(),
+  const db = getFirebaseDb();
+  const ref = doc(db, "users", uid, "tracks", slot);
+  const { encoded, meta } = buildTrackWrite(name, segments, riderStart, character);
+  await runTransaction(db, async (transaction) => {
+    const existing = await transaction.get(ref);
+    if (existing.exists()) {
+      throw new TrackClientError("That save slot was just taken. Try again.");
+    }
+    transaction.set(ref, { ...meta, createdAt: serverTimestamp() });
+    transaction.set(doc(ref, "parts", "segments"), { segments: encoded });
   });
-  return ref.id;
+  return slot;
 }
 
 export async function updateUserTrack(
@@ -194,16 +321,18 @@ export async function updateUserTrack(
   const ref = doc(getFirebaseDb(), "users", uid, "tracks", trackId);
   const existing = await getDoc(ref);
   if (!existing.exists()) {
-    throw new Error("Track not found.");
+    throw new TrackClientError("Track not found.");
   }
 
-  await setDoc(
-    ref,
-    {
-      ...buildTrackPayload(name, segments, riderStart, character),
-      createdAt: existing.data()?.createdAt ?? serverTimestamp(),
-    },
-    { merge: true }
+  const createdAt = existing.data()?.createdAt ?? serverTimestamp();
+  await commitTrackWrite(
+    uid,
+    trackId,
+    name,
+    segments,
+    riderStart,
+    character,
+    createdAt
   );
 }
 
@@ -211,6 +340,10 @@ export async function deleteUserTrack(
   uid: string,
   trackId: string
 ): Promise<void> {
-  const ref = doc(getFirebaseDb(), "users", uid, "tracks", trackId);
-  await deleteDoc(ref);
+  const db = getFirebaseDb();
+  const ref = doc(db, "users", uid, "tracks", trackId);
+  const batch = writeBatch(db);
+  batch.delete(doc(ref, "parts", "segments"));
+  batch.delete(ref);
+  await batch.commit();
 }

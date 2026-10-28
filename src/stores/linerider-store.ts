@@ -28,7 +28,7 @@ import {
   type PlaybackSpeed,
 } from "@/lib/linerider/constants";
 import type { CharacterType } from "@/lib/linerider/characters";
-import type { TrackFileV1 } from "@/lib/linerider/track-file";
+import { MAX_TRACK_SEGMENTS, type TrackFileV1 } from "@/lib/linerider/track-file";
 
 export type ToolMode = "draw" | "line" | "pan" | "erase";
 
@@ -58,6 +58,8 @@ type LineriderState = Readonly<{
   /** Active cloud track when loaded/saved from Firestore (null = new local canvas). */
   cloudTrackId: string | null;
   cloudTrackName: string | null;
+  /** Name from the last loaded or saved track. Null until a track is named. */
+  trackName: string | null;
 
   settings: LineriderSettings;
 
@@ -77,6 +79,8 @@ type LineriderActions = Readonly<{
   /** Replace track from a validated JSON file (clears undo/redo, stops playback). */
   loadTrack: (data: TrackFileV1) => void;
   setCloudTrackMeta: (id: string | null, name?: string | null) => void;
+  /** Record one undo step after an erase stroke that removed segments. */
+  commitEraseStroke: (previousSegments: readonly Segment[]) => void;
   addSegment: (a: Vec2, b: Vec2) => void;
   eraseAt: (
     p: Vec2,
@@ -187,6 +191,7 @@ export const useLineriderStore = create<LineriderStore>()(
     flag: null,
     cloudTrackId: null,
     cloudTrackName: null,
+    trackName: null,
 
     settings: DEFAULT_SETTINGS,
 
@@ -233,13 +238,17 @@ export const useLineriderStore = create<LineriderStore>()(
 
     clearTrack: () =>
       set((s) => {
-        if (s.segments.length === 0) return s;
+        if (s.segments.length === 0) {
+          if (!s.flag && s.trackName === null) return s;
+          return { flag: null, trackName: null };
+        }
         return {
           ...commitTrackChange(s, []),
           isPlaying: false,
           rider: createSimpleRider(s.riderStart),
           elapsedTime: 0,
           flag: null,
+          trackName: null,
         };
       }),
 
@@ -264,24 +273,36 @@ export const useLineriderStore = create<LineriderStore>()(
           flag: null,
           cloudTrackId: null,
           cloudTrackName: null,
+          trackName: data.name,
           spatialHash: null,
           spatialHashVersion: -1,
         };
       }),
 
     setCloudTrackMeta: (id, name = null) =>
-      set({
+      set((s) => ({
         cloudTrackId: id,
         cloudTrackName: name,
+        trackName: name && name.trim() ? name : s.trackName,
+      })),
+
+    commitEraseStroke: (previousSegments) =>
+      set((s) => {
+        if (s.segments.length === previousSegments.length) return s;
+        return {
+          history: [...s.history, [...previousSegments]].slice(-MAX_HISTORY),
+          redoHistory: [],
+        };
       }),
 
     addSegment: (a, b) =>
-      set((s) =>
-        commitTrackChange(s, [
+      set((s) => {
+        if (s.segments.length >= MAX_TRACK_SEGMENTS) return s;
+        return commitTrackChange(s, [
           ...s.segments,
           { id: makeId(), a, b, type: s.lineType },
-        ])
-      ),
+        ]);
+      }),
 
     eraseAt: (p, radiusWorld, options) =>
       set((s) => {
@@ -296,9 +317,12 @@ export const useLineriderStore = create<LineriderStore>()(
     addSegments: (segments) =>
       set((s) => {
         if (segments.length === 0) return s;
+        const room = MAX_TRACK_SEGMENTS - s.segments.length;
+        if (room <= 0) return s;
+        const accepted = segments.slice(0, room);
         return commitTrackChange(s, [
           ...s.segments,
-          ...segments.map((seg) => ({
+          ...accepted.map((seg) => ({
             id: makeId(),
             ...seg,
             type: s.lineType,

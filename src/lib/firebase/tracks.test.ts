@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { parseCloudTrackDocument, cloudTrackToTrackFile } from "./tracks";
+import {
+  TrackClientError,
+  cloudTrackToTrackFile,
+  parseCloudTrackDocument,
+  parseTrackSummary,
+  toUserTrackMessage,
+} from "./tracks";
 
 describe("parseCloudTrackDocument", () => {
   it("accepts valid compact payload", () => {
@@ -29,6 +35,43 @@ describe("parseCloudTrackDocument", () => {
         character: "ball",
       })
     ).toBeNull();
+  });
+
+  it("lists metadata without requiring inline segments", () => {
+    expect(
+      parseTrackSummary("slot-1", {
+        name: "Hill",
+        version: 1,
+        segmentCount: 4,
+        riderStart: { x: 0, y: 0 },
+        character: "ball",
+        updatedAt: { toDate: () => new Date("2026-01-02T00:00:00Z") },
+      })
+    ).toMatchObject({
+      id: "slot-1",
+      name: "Hill",
+      segmentCount: 4,
+    });
+    expect(
+      parseTrackSummary("slot-1", {
+        name: "Hill",
+        version: 1,
+        segmentCount: 4,
+      }).unreadable
+    ).toBeUndefined();
+  });
+
+  it("keeps an unreadable document visible so it can be deleted", () => {
+    expect(parseTrackSummary("slot-2", { name: "" }).unreadable).toBe(true);
+  });
+
+  it("shows only safe track errors", () => {
+    expect(toUserTrackMessage(new TrackClientError("Track not found."), "no")).toBe(
+      "Track not found."
+    );
+    expect(toUserTrackMessage(new Error("7 PERMISSION_DENIED"), "Could not save track.")).toBe(
+      "Could not save track."
+    );
   });
 
   it("rejects invalid character", () => {

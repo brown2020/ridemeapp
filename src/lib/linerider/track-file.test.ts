@@ -61,4 +61,17 @@ describe("track-file", () => {
     });
     expect(parseTrackFile(json).ok).toBe(false);
   });
+
+  it("rejects coordinates outside the playable world", () => {
+    const json = JSON.stringify({
+      version: TRACK_FILE_VERSION,
+      name: "Far",
+      segments: [
+        { a: { x: 0, y: 0 }, b: { x: 2_000_000, y: 0 }, type: "normal" },
+      ],
+      riderStart: { x: 0, y: 0 },
+      character: "ball",
+    });
+    expect(parseTrackFile(json).ok).toBe(false);
+  });
 });

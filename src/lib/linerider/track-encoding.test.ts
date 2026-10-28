@@ -24,4 +24,8 @@ describe("track-encoding", () => {
     expect(decodeSegments([[0, 0, 1, 1]])).toBeNull();
     expect(decodeSegments("bad")).toBeNull();
   });
+
+  it("rejects coordinates outside the playable world", () => {
+    expect(decodeSegments([[0, 0, 2_000_000, 0, 0]])).toBeNull();
+  });
 });

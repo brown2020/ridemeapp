@@ -1,5 +1,6 @@
 import { useLineriderStore } from "@/stores/linerider-store";
 import {
+  MAX_TRACK_FILE_BYTES,
   parseTrackFile,
   serializeTrackFile,
   trackNameToFilename,
@@ -10,15 +11,20 @@ export function trackHasContent(): boolean {
   return useLineriderStore.getState().segments.length > 0;
 }
 
-export function saveTrackToFile(name = "Untitled Track"): void {
+export function saveTrackToFile(name?: string): void {
   const state = useLineriderStore.getState();
+  const resolved =
+    name?.trim() ||
+    state.trackName?.trim() ||
+    state.cloudTrackName?.trim() ||
+    "Untitled Track";
   const json = serializeTrackFile(
     state.segments,
     state.riderStart,
     state.character,
-    name
+    resolved
   );
-  const filename = trackNameToFilename(name.trim() || "Untitled Track");
+  const filename = trackNameToFilename(resolved);
   const blob = new Blob([json], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -41,6 +47,9 @@ export async function readTrackFile(file: File): Promise<
   | { ok: true; data: TrackFileV1 }
   | { ok: false; error: string }
 > {
+  if (file.size > MAX_TRACK_FILE_BYTES) {
+    return { ok: false, error: "Track file is too large." };
+  }
   try {
     const text = await file.text();
     return parseTrackFile(text);
@@ -56,15 +65,21 @@ export function pickTrackJsonFile(): Promise<File | null> {
     input.type = "file";
     input.accept = ".json,application/json";
     input.style.display = "none";
+    let settled = false;
+    const finish = (file: File | null) => {
+      if (settled) return;
+      settled = true;
+      input.remove();
+      resolve(file);
+    };
     input.addEventListener(
       "change",
       () => {
-        const file = input.files?.[0] ?? null;
-        input.remove();
-        resolve(file);
+        finish(input.files?.[0] ?? null);
       },
       { once: true }
     );
+    input.addEventListener("cancel", () => finish(null), { once: true });
     document.body.appendChild(input);
     input.click();
   });

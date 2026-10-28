@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { useLineriderStore } from "./linerider-store";
 import { v } from "@/lib/linerider/math";
+import { MAX_TRACK_SEGMENTS } from "@/lib/linerider/track-file";
 
 describe("linerider-store track edits", () => {
   beforeEach(() => {
@@ -24,6 +25,8 @@ describe("linerider-store track edits", () => {
       trackVersion: 1,
       isPlaying: true,
       elapsedTime: 5,
+      flag: null,
+      trackName: null,
     });
   });
 
@@ -240,6 +243,52 @@ describe("linerider-store track edits", () => {
     expect(state.isPlaying).toBe(false);
     expect(state.character).toBe("horse");
     expect(state.riderStart).toEqual({ x: 0, y: -200 });
+    expect(state.trackName).toBe("Imported");
+  });
+
+  it("clearTrack clears a flag when the canvas is already empty", () => {
+    useLineriderStore.setState({
+      segments: [],
+      flag: {
+        rider: useLineriderStore.getState().rider,
+        elapsedTime: 2,
+      },
+      trackName: "Kept",
+    });
+    useLineriderStore.getState().clearTrack();
+    const state = useLineriderStore.getState();
+    expect(state.flag).toBeNull();
+    expect(state.trackName).toBeNull();
+  });
+
+  it("commitEraseStroke ignores a miss and keeps redo", () => {
+    const segments = useLineriderStore.getState().segments;
+    useLineriderStore.setState({ redoHistory: [[]] });
+    useLineriderStore.getState().commitEraseStroke(segments);
+    expect(useLineriderStore.getState().history).toHaveLength(0);
+    expect(useLineriderStore.getState().redoHistory).toHaveLength(1);
+  });
+
+  it("commitEraseStroke records one undo step after lines are removed", () => {
+    const before = useLineriderStore.getState().segments;
+    useLineriderStore.getState().eraseAt(v(5, 0), 2, { recordHistory: false });
+    useLineriderStore.getState().commitEraseStroke(before);
+    expect(useLineriderStore.getState().history).toHaveLength(1);
+    useLineriderStore.getState().undo();
+    expect(useLineriderStore.getState().segments).toHaveLength(2);
+  });
+
+  it("addSegment stops at the track line cap", () => {
+    useLineriderStore.setState({
+      segments: Array.from({ length: MAX_TRACK_SEGMENTS }, (_, index) => ({
+        id: `s-${index}`,
+        a: v(index, 0),
+        b: v(index + 1, 0),
+        type: "normal" as const,
+      })),
+    });
+    useLineriderStore.getState().addSegment(v(0, 1), v(1, 1));
+    expect(useLineriderStore.getState().segments).toHaveLength(MAX_TRACK_SEGMENTS);
   });
 
   it("batches erase stroke into one history entry", () => {

@@ -13,6 +13,7 @@ import {
   deleteUserTrack,
   cloudTrackToTrackFile,
   MAX_USER_TRACKS,
+  toUserTrackMessage,
   type CloudTrackSummary,
 } from "@/lib/firebase/tracks";
 import { shouldConfirmReplaceTrack } from "@/lib/linerider/track-file-client";
@@ -109,7 +110,7 @@ export function MyTracksModal({ auth, onClose, onError }: MyTracksModalProps) {
       }
       await refreshTracks();
     } catch (err) {
-      reportError(err instanceof Error ? err.message : "Could not save track.");
+      reportError(toUserTrackMessage(err, "Could not save track."));
     } finally {
       setIsSaving(false);
     }
@@ -135,16 +136,16 @@ export function MyTracksModal({ auth, onClose, onError }: MyTracksModalProps) {
     setLoadingTrackId(trackId);
     setListError(null);
     try {
-      const doc = await getUserTrack(uid, trackId);
-      if (!doc) {
+      const cloudTrack = await getUserTrack(uid, trackId);
+      if (!cloudTrack) {
         reportError("Track not found.");
         return;
       }
-      loadTrack(cloudTrackToTrackFile(doc));
-      setCloudTrackMeta(trackId, doc.name);
+      loadTrack(cloudTrackToTrackFile(cloudTrack));
+      setCloudTrackMeta(trackId, cloudTrack.name);
       onCloseRef.current();
-    } catch {
-      reportError("Could not load track.");
+    } catch (err) {
+      reportError(toUserTrackMessage(err, "Could not load track."));
     } finally {
       setLoadingTrackId(null);
     }
