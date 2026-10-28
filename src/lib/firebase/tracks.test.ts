@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   TrackClientError,
   cloudTrackToTrackFile,
+  logTrackError,
   parseCloudTrackDocument,
   parseTrackSummary,
   toUserTrackMessage,
@@ -72,6 +73,38 @@ describe("parseCloudTrackDocument", () => {
     expect(toUserTrackMessage(new Error("7 PERMISSION_DENIED"), "Could not save track.")).toBe(
       "Could not save track."
     );
+    expect(
+      toUserTrackMessage(
+        Object.assign(new Error("Missing or insufficient permissions."), {
+          code: "permission-denied",
+        }),
+        "Could not save track."
+      )
+    ).toBe("Could not save track (permission-denied). Firestore rules rejected the request.");
+    expect(
+      toUserTrackMessage(
+        Object.assign(new Error("Nested arrays are not supported"), {
+          code: "firestore/invalid-argument",
+        }),
+        "Could not save track."
+      )
+    ).toBe("Could not save track (invalid-argument).");
+  });
+
+  it("logs the firestore code and message", () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    logTrackError(
+      "save",
+      Object.assign(new Error("Missing or insufficient permissions."), {
+        code: "permission-denied",
+      })
+    );
+    expect(spy).toHaveBeenCalledWith(
+      "[tracks] save failed",
+      "permission-denied",
+      "Missing or insufficient permissions."
+    );
+    spy.mockRestore();
   });
 
   it("rejects invalid character", () => {

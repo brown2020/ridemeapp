@@ -13,6 +13,7 @@ import {
   deleteUserTrack,
   cloudTrackToTrackFile,
   MAX_USER_TRACKS,
+  logTrackError,
   toUserTrackMessage,
   type CloudTrackSummary,
 } from "@/lib/firebase/tracks";
@@ -71,8 +72,9 @@ export function MyTracksModal({ auth, onClose, onError }: MyTracksModalProps) {
     setListError(null);
     try {
       setTracks(await listUserTracks(uid));
-    } catch {
-      setListError("Could not load your tracks. Try again.");
+    } catch (err) {
+      logTrackError("list", err);
+      setListError(toUserTrackMessage(err, "Could not load your tracks. Try again."));
     } finally {
       setIsLoadingList(false);
     }
@@ -110,6 +112,7 @@ export function MyTracksModal({ auth, onClose, onError }: MyTracksModalProps) {
       }
       await refreshTracks();
     } catch (err) {
+      logTrackError("save", err);
       reportError(toUserTrackMessage(err, "Could not save track."));
     } finally {
       setIsSaving(false);
@@ -145,6 +148,7 @@ export function MyTracksModal({ auth, onClose, onError }: MyTracksModalProps) {
       setCloudTrackMeta(trackId, cloudTrack.name);
       onCloseRef.current();
     } catch (err) {
+      logTrackError("load", err);
       reportError(toUserTrackMessage(err, "Could not load track."));
     } finally {
       setLoadingTrackId(null);
@@ -160,8 +164,9 @@ export function MyTracksModal({ auth, onClose, onError }: MyTracksModalProps) {
       await deleteUserTrack(uid, trackId);
       if (cloudTrackId === trackId) setCloudTrackMeta(null, null);
       await refreshTracks();
-    } catch {
-      reportError("Could not delete track.");
+    } catch (err) {
+      logTrackError("delete", err);
+      reportError(toUserTrackMessage(err, "Could not delete track."));
     } finally {
       setDeletingTrackId(null);
     }

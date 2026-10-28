@@ -116,8 +116,35 @@ function buildTrackWrite(
   };
 }
 
+function firebaseErrorCode(error: unknown): string | null {
+  if (!error || typeof error !== "object" || !("code" in error)) return null;
+  const code = (error as { code: unknown }).code;
+  if (typeof code !== "string" || code.length === 0) return null;
+  return code.startsWith("firestore/") ? code.slice("firestore/".length) : code;
+}
+
+function firebaseErrorMessage(error: unknown): string {
+  return error instanceof Error && error.message ? error.message : "Unknown error";
+}
+
+/** Console log of the Firestore code and message. The UI still gets a short line. */
+export function logTrackError(operation: string, error: unknown): void {
+  console.error(
+    `[tracks] ${operation} failed`,
+    firebaseErrorCode(error) ?? "unknown",
+    firebaseErrorMessage(error)
+  );
+}
+
 export function toUserTrackMessage(error: unknown, fallback: string): string {
-  return error instanceof TrackClientError ? error.message : fallback;
+  if (error instanceof TrackClientError) return error.message;
+  const code = firebaseErrorCode(error);
+  if (!code) return fallback;
+  const lead = fallback.replace(/\.$/, "");
+  if (code === "permission-denied") {
+    return `${lead} (${code}). Firestore rules rejected the request.`;
+  }
+  return `${lead} (${code}).`;
 }
 
 const UNREADABLE_TRACK_NAME = "Unreadable track";

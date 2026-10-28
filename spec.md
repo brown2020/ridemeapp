@@ -263,7 +263,7 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 - [x] Unsaved canvas prompts before load/replace.
 - [x] Rules reject invalid payloads.
 
-**Implementation note:** `track-encoding.ts` (`[ax,ay,bx,by,typeIndex]` rows); `firebase/tracks.ts` CRUD. Track metadata lives on `/users/{uid}/tracks/{slot}` and the segment array lives on `parts/segments` so the list query does not download line geometry. New ids are `slot-0` … `slot-49` (rules reject any other create). At most 12,000 lines, coordinates within ±1,000,000, and the encoded JSON must stay under 900 KB. `MyTracksModal` when signed in; `cloudTrackId` / `cloudTrackName` / `trackName` in the store. Deploy `firestore.rules` with the app or cloud saves are rejected.
+**Implementation note:** `track-encoding.ts` (map rows `{ax,ay,bx,by,t}`, because Firestore rejects nested arrays); `firebase/tracks.ts` CRUD. Track metadata lives on `/users/{uid}/tracks/{slot}` and the segment array lives on `parts/segments` so the list query does not download line geometry. New ids are `slot-0` … `slot-49` (rules reject any other create). At most 12,000 lines, coordinates within ±1,000,000, and the encoded JSON must stay under 900 KB. `MyTracksModal` when signed in; `cloudTrackId` / `cloudTrackName` / `trackName` in the store. Deploy `firestore.rules` with the app or cloud saves are rejected.
 
 **Depends on:** Milestone 6 schema.
 
