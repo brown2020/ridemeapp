@@ -57,7 +57,7 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                   <div>Left drag → draw/erase</div>
                   <div>Scroll → zoom</div>
                   <div>Right drag → pan</div>
-                  <div>Shift+click → set start</div>
+                  <div>Shift+click → set start (snaps a line in progress)</div>
                   <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       +
@@ -149,13 +149,13 @@ export function HelpPanel({ onClose }: HelpPanelProps) {
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       Tab
                     </kbd>{" "}
-                    → fit full track (pan only)
+                    → fit full track when the canvas is focused
                   </div>
                   <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">
                       R/Home/0
                     </kbd>{" "}
-                    → reset view only
+                    → reset view and pause
                   </div>
                   <div>
                     <kbd className="px-1.5 py-0.5 bg-white rounded border border-slate-200 text-xs">

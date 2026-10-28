@@ -72,7 +72,7 @@ flowchart LR
 Verified in code (not docs):
 
 - **Drawing:** Pencil (`draw`), straight line (`line`), pan (`pan`), eraser (`erase`). Three line types: `normal`, `accel`, `scenery`. Freehand segments with min draw distance; line tool is click–click with Shift 15° snap; batched erase strokes.
-- **Playback:** Space play/pause (pause resumes mid-ride). **Stop** (`S`, Escape, toolbar) resets rider to start. `R` / Home / `0` reset **camera view only** via `resetCamera()`.
+- **Playback:** Space play/pause (pause resumes mid-ride). **Stop** (`S`, Escape, toolbar) resets rider to start. `R` / Home / `0` reset the camera and pause playback via `resetCamera()`.
 - **Physics:** Verlet ball rider, spatial hash collisions, out-of-bounds auto-pause, playback speeds `0.25×–4×` (validated in store).
 - **Camera:** Wheel zoom at cursor, follow toggle (`F`), grid toggle (`G`).
 - **History:** Undo (`⌘Z`) and redo (`⌘⇧Z`), max 200 steps each.
@@ -81,7 +81,7 @@ Verified in code (not docs):
 - **Auth:** Google popup, email/password, email link (with `EmailConfirmModal` when email missing from storage). Profiles at `/users/{uid}`.
 - **Legal pages:** `/privacy`, `/terms` (static). 404 has home link.
 - **Local tracks:** Save/open JSON (`⌘S` / `⌘O`, toolbar); schema v1 in `track-file.ts`.
-- **Cloud tracks:** Signed-in users — My Tracks modal (toolbar cloud icon); Firestore `/users/{uid}/tracks/{id}`; max 50 tracks.
+- **Cloud tracks:** Signed-in users — My Tracks modal (toolbar cloud icon); Firestore metadata at `/users/{uid}/tracks/{id}` (`slot-0` … `slot-49`) and segments at `parts/segments`; max 50 tracks and 12,000 lines.
 - **Not implemented:** Shareable URLs, timeline scrubbing, select/move, API routes, PWA/offline.
 
 ## Important commands
@@ -231,10 +231,11 @@ Stop and report (do not guess) when:
 | I | Set flag at current rider state |
 | F | Jump to flag (pauses) |
 | Shift+F | Toggle camera follow |
-| R / Home / 0 | Reset camera view only |
+| R / Home / 0 | Reset camera and pause playback |
+| Tab | Fit the whole track while the canvas is focused |
 | ⌘Z / Ctrl+Z | Undo |
 | ⌘⇧Z / Ctrl+Shift+Z | Redo |
 | C | Clear track |
-| Shift+click | Set rider start |
+| Shift+click | Set rider start (while a line is in progress, Shift snaps 15°) |
 
 See `spec.md` for planned shortcuts (redo, line tool, flags, save/load, etc.).

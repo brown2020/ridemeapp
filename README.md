@@ -88,8 +88,8 @@ Copy `env.example` to `.env.local`. Leave blank to run the editor without cloud 
 ### Firebase setup (optional)
 
 1. Enable **Google**, **Email/Password**, and (optionally) **Email link** providers.
-2. Deploy `firestore.rules` so users only read/write their own `users/{uid}` documents and track subcollections.
-3. `storage.rules` are included for future use; the app does not upload files to Storage today.
+2. Deploy `firestore.rules` before this app version. Track metadata is `/users/{uid}/tracks/slot-0` … `slot-49` (50 tracks). Segment geometry is `/users/{uid}/tracks/{id}/parts/segments` (at most 12,000 lines). Profiles stay owner-only.
+3. Deploy `storage.rules` with that ruleset. The app does not upload files today. Rules allow owner bitmap images (`png`, `jpeg`, `webp`, `gif`) and explicit deletes.
 
 ### Run locally
 
@@ -126,7 +126,7 @@ Unit coverage includes physics/math helpers, track encoding, Zustand store logic
 
 ## Deployment
 
-Hosted at [ride.me](https://ride.me) (typically Vercel). Set the same `NEXT_PUBLIC_FIREBASE_*` values in the host’s environment. Deploy Firestore rules before enabling production auth/cloud tracks.
+Hosted at [ride.me](https://ride.me) (typically Vercel). Set the same `NEXT_PUBLIC_FIREBASE_*` values in the host’s environment. Use Node.js 24.12 or newer (`package.json` `engines` and CI). Deploy `firestore.rules` and `storage.rules` with the app release; no composite index changes.
 
 ## Contributing
 

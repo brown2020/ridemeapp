@@ -160,7 +160,7 @@ export function ViewControls({
       <IconBtn active={isCameraFollowing} onClick={toggleCameraFollowing} tooltip="Follow rider (Shift+F)">
         <Focus className="w-5 h-5" />
       </IconBtn>
-      <IconBtn onClick={resetCamera} tooltip="Reset view only (R / Home)">
+      <IconBtn onClick={resetCamera} tooltip="Reset view and pause (R / Home)">
         <Home className="w-5 h-5" />
       </IconBtn>
     </div>

@@ -180,7 +180,7 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 - [x] Shift constrains angle to 15° increments.
 - [x] Help panel documents line tool.
 
-**Implementation note (2026-05-26):** `snapLineEndpoint` in `math.ts`; canvas click–click flow with live preview; `addSegment` for one undo step; `Ruler` toolbar button; Escape cancels in-progress line. Tests in `math.test.ts`.
+**Implementation note (2026-05-26):** `snapLineEndpoint` in `math.ts`; canvas click–click flow with live preview; `addSegment` for one undo step; `Ruler` toolbar button; Escape cancels in-progress line. Shift+click sets the rider start, except while a line is waiting for its end point — then Shift snaps that end to 15°. Tests in `math.test.ts` and `input-gestures.test.ts`.
 
 ---
 
@@ -196,7 +196,7 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 - [x] Stop resets rider to `riderStart`, time 0, not playing.
 - [x] `R` / Home / `0` reset view only (or documented combined behavior).
 
-**Implementation note (2026-05-26):** Renamed store action to `stop()`; `resetCamera()` only resets camera + pauses; Square toolbar button; `S` and Escape shortcuts; Escape capture on canvas defers to line-cancel when placing. Tests in `linerider-store.test.ts`.
+**Implementation note (2026-05-26):** Renamed store action to `stop()`; `resetCamera()` resets the camera and pauses playback; Square toolbar button; `S` and Escape shortcuts; Escape capture on canvas defers to line-cancel when placing. Tests in `linerider-store.test.ts`.
 
 ---
 
@@ -229,7 +229,7 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 - [x] Release Tab restores previous camera.
 - [x] No segment edits during overview.
 
-**Implementation note:** `computeTrackOverviewCamera` in `src/lib/linerider/track-bounds.ts`; hold Tab on canvas (`linerider-canvas.tsx`) fits bounds with padding, pauses playback, restores saved camera on keyup/blur; pointer input is pan-only while overview is active.
+**Implementation note:** `computeTrackOverviewCamera` in `src/lib/linerider/track-bounds.ts`; hold Tab while the canvas is focused (`linerider-canvas.tsx`) fits bounds with padding, pauses playback, restores saved camera on keyup/blur; pointer input is pan-only while overview is active. Tab elsewhere moves focus through the page.
 
 ---
 
@@ -263,7 +263,7 @@ Ordered for product impact and dependencies. Each item is sized for **one focuse
 - [x] Unsaved canvas prompts before load/replace.
 - [x] Rules reject invalid payloads.
 
-**Implementation note:** `track-encoding.ts` (`[ax,ay,bx,by,typeIndex]` rows); `firebase/tracks.ts` CRUD; `MyTracksModal` + cloud toolbar button when signed in; `cloudTrackId`/`cloudTrackName` in store; stricter `firestore.rules` on track documents.
+**Implementation note:** `track-encoding.ts` (`[ax,ay,bx,by,typeIndex]` rows); `firebase/tracks.ts` CRUD. Track metadata lives on `/users/{uid}/tracks/{slot}` and the segment array lives on `parts/segments` so the list query does not download line geometry. New ids are `slot-0` … `slot-49` (rules reject any other create). At most 12,000 lines, coordinates within ±1,000,000, and the encoded JSON must stay under 900 KB. `MyTracksModal` when signed in; `cloudTrackId` / `cloudTrackName` / `trackName` in the store. Deploy `firestore.rules` with the app or cloud saves are rejected.
 
 **Depends on:** Milestone 6 schema.
 
