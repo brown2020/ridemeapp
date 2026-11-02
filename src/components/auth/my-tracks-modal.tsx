@@ -81,8 +81,26 @@ export function MyTracksModal({ auth, onClose, onError }: MyTracksModalProps) {
   }, [uid]);
 
   useEffect(() => {
-    void refreshTracks();
-  }, [refreshTracks]);
+    if (!uid) return;
+    let cancelled = false;
+    void listUserTracks(uid).then(
+      (next) => {
+        if (cancelled) return;
+        setTracks(next);
+        setListError(null);
+        setIsLoadingList(false);
+      },
+      (err: unknown) => {
+        if (cancelled) return;
+        logTrackError("list", err);
+        setListError(toUserTrackMessage(err, "Could not load your tracks. Try again."));
+        setIsLoadingList(false);
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [uid]);
 
   const reportError = (message: string) => {
     if (onError) onError(message);

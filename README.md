@@ -22,13 +22,13 @@ Works without Firebase: the editor and local file I/O remain fully usable when e
 
 | Layer | Choice |
 | --- | --- |
-| Framework | Next.js `^16.2.9` (App Router) |
-| UI | React `^19.2.7`, Tailwind CSS `^4.3.1`, Lucide icons, Geist fonts |
-| Language | TypeScript `^6` |
-| Auth / data | Firebase `^12` (Auth + Firestore client SDK) |
+| Framework | Next.js `^16.4.3` (App Router) |
+| UI | React `^19.3.1`, Tailwind CSS `^4.3.3`, Lucide icons, Geist fonts |
+| Language | TypeScript `^6.0.3` (7.0 is held: typescript-eslint has no TS 7 API yet) |
+| Auth / data | Firebase `^13` (Auth + Firestore client SDK) |
 | State | Zustand `^5` |
 | Physics / canvas | Custom engine under `src/lib/linerider/` + canvas hooks |
-| Tests | Vitest `^4` |
+| Tests | Vitest `^5` |
 | Lint | ESLint `^10` + `eslint-config-next` |
 
 No Stripe, no AI providers, no Server Actions, and no API routes in the current tree.
@@ -60,7 +60,7 @@ env.example
 
 ### Prerequisites
 
-- Node.js 22+
+- Node.js 24.12+ (`package.json` `engines`; CI uses Node 24)
 - npm
 - Optional: Firebase project (Auth + Firestore) for sign-in and cloud tracks
 

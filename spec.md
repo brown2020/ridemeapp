@@ -110,6 +110,7 @@ Single-route canvas game (`LineriderApp`) filling the viewport. No separate land
 ### Technical constraints
 
 - Client-only Firebase (public config vars).
+- TypeScript stays on 6.0.x. TypeScript 7.0 ships no compiler API, so `typescript-eslint` (via `eslint-config-next`) cannot lint it.
 - Firestore track documents limited by rules (name required; owner-only read/write).
 - AGPL-3.0 license.
 - No server-side track validation or thumbnails yet.

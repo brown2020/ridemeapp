@@ -304,3 +304,86 @@ describe("linerider-store track edits", () => {
     expect(useLineriderStore.getState().segments).toHaveLength(2);
   });
 });
+
+describe("linerider-store playback", () => {
+  beforeEach(() => {
+    const rider = useLineriderStore.getState().rider;
+    useLineriderStore.setState({
+      segments: [],
+      isPlaying: true,
+      elapsedTime: 4,
+      flag: null,
+      settings: {
+        ...useLineriderStore.getState().settings,
+        isCameraFollowing: false,
+        playbackSpeed: 1,
+      },
+      rider: {
+        ...rider,
+        crashed: false,
+        points: [
+          {
+            pos: { x: 0, y: -100 },
+            prevPos: { x: 0, y: -100 },
+            friction: 0.02,
+          },
+        ],
+      },
+    });
+  });
+
+  it("pauses and resumes without resetting the ride", () => {
+    const before = useLineriderStore.getState();
+    const pos = { ...before.rider.points[0].pos };
+
+    useLineriderStore.getState().togglePlaying();
+    const paused = useLineriderStore.getState();
+    expect(paused.isPlaying).toBe(false);
+    expect(paused.elapsedTime).toBe(4);
+    expect(paused.rider.points[0].pos).toEqual(pos);
+
+    useLineriderStore.getState().togglePlaying();
+    const resumed = useLineriderStore.getState();
+    expect(resumed.isPlaying).toBe(true);
+    expect(resumed.elapsedTime).toBe(4);
+    expect(resumed.rider.points[0].pos).toEqual(pos);
+  });
+
+  it("steps the rider forward and scales elapsed time by playback speed", () => {
+    const dt = 1 / 60;
+    useLineriderStore.getState().stepSimulation(dt);
+    const once = useLineriderStore.getState();
+    expect(once.elapsedTime).toBeCloseTo(4 + dt);
+    expect(once.rider.points[0].pos.y).toBeGreaterThan(-100);
+    expect(once.isPlaying).toBe(true);
+
+    useLineriderStore.getState().setPlaybackSpeed(3);
+    expect(useLineriderStore.getState().settings.playbackSpeed).toBe(1);
+
+    useLineriderStore.getState().setPlaybackSpeed(2);
+    const elapsed = useLineriderStore.getState().elapsedTime;
+    useLineriderStore.getState().stepSimulation(dt);
+    expect(useLineriderStore.getState().elapsedTime).toBeCloseTo(elapsed + dt * 2);
+  });
+
+  it("pauses when the rider leaves the world bounds", () => {
+    const rider = useLineriderStore.getState().rider;
+    useLineriderStore.setState({
+      rider: {
+        ...rider,
+        points: [
+          {
+            pos: { x: 0, y: 100_001 },
+            prevPos: { x: 0, y: 100_001 },
+            friction: 0.02,
+          },
+        ],
+      },
+    });
+
+    useLineriderStore.getState().stepSimulation(1 / 60);
+    const state = useLineriderStore.getState();
+    expect(state.isPlaying).toBe(false);
+    expect(state.rider.points[0].pos.y).toBeGreaterThan(100_000);
+  });
+});
