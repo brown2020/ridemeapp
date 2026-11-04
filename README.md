@@ -22,8 +22,8 @@ Works without Firebase: the editor and local file I/O remain fully usable when e
 
 | Layer | Choice |
 | --- | --- |
-| Framework | Next.js `^16.4.3` (App Router) |
-| UI | React `^19.3.1`, Tailwind CSS `^4.3.3`, Lucide icons, Geist fonts |
+| Framework | Next.js `^16.4.5` (App Router) |
+| UI | React `^19.3.1`, Tailwind CSS `^4.3.4`, Lucide icons, Geist fonts |
 | Language | TypeScript `^6.0.3` (7.0 is held: typescript-eslint has no TS 7 API yet) |
 | Auth / data | Firebase `^13` (Auth + Firestore client SDK) |
 | State | Zustand `^5` |

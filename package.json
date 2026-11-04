@@ -17,26 +17,26 @@
     "doctor": "npx -y react-doctor@latest . --verbose --yes"
   },
   "dependencies": {
-    "firebase": "^13.1.0",
-    "lucide-react": "^1.66.0",
-    "next": "^16.4.3",
+    "firebase": "^13.2.0",
+    "lucide-react": "^1.68.0",
+    "next": "^16.4.5",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
-    "@tailwindcss/postcss": "^4.3.3",
-    "@types/node": "^26.6.6",
+    "@tailwindcss/postcss": "^4.3.4",
+    "@types/node": "^24.19.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "eslint": "^10.14.0",
-    "eslint-config-next": "^16.4.3",
+    "eslint-config-next": "^16.4.5",
     "postcss": "^8.5.32",
-    "tailwindcss": "^4.3.3",
+    "tailwindcss": "^4.3.4",
     "typescript": "^6.0.3",
     "vite": "^8.3.5",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   },
   "overrides": {
     "eslint-plugin-react-hooks": "^7.1.1",
